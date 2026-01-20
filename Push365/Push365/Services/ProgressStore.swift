@@ -151,4 +151,117 @@ final class ProgressStore {
     func recomputeCompleted(for record: DayRecord) {
         record.completed = record.logs.reduce(0) { $0 + $1.amount }
     }
+    
+    // MARK: - Progress Analytics
+    
+    /// Fetches all DayRecords sorted by dateKey ascending
+    /// - Parameter modelContext: The SwiftData model context
+    /// - Returns: Array of all DayRecords sorted by date
+    func allRecords(modelContext: ModelContext) throws -> [DayRecord] {
+        var descriptor = FetchDescriptor<DayRecord>(
+            sortBy: [SortDescriptor(\.dateKey, order: .forward)]
+        )
+        descriptor.includePendingChanges = true
+        return try modelContext.fetch(descriptor)
+    }
+    
+    /// Calculates total push-ups for lifetime and year-to-date
+    /// - Parameters:
+    ///   - records: Array of DayRecords
+    ///   - calendar: Calendar to use for year comparison
+    /// - Returns: Tuple of (lifetime, yearToDate) totals
+    func totals(records: [DayRecord], calendar: Calendar = .current) -> (lifetime: Int, yearToDate: Int) {
+        let currentYear = calendar.component(.year, from: Date())
+        
+        var lifetime = 0
+        var yearToDate = 0
+        
+        for record in records {
+            lifetime += record.completed
+            
+            let recordYear = calendar.component(.year, from: record.dateKey)
+            if recordYear == currentYear {
+                yearToDate += record.completed
+            }
+        }
+        
+        return (lifetime, yearToDate)
+    }
+    
+    /// Calculates current streak (consecutive completed days ending today or yesterday)
+    /// - Parameters:
+    ///   - records: Array of DayRecords sorted by dateKey
+    ///   - todayKey: Today's dateKey (start of day)
+    ///   - calendar: Calendar to use
+    /// - Returns: Current streak count
+    func currentStreak(records: [DayRecord], todayKey: Date, calendar: Calendar = .current) -> Int {
+        guard !records.isEmpty else { return 0 }
+        
+        // Start from today and work backwards
+        var currentDate = todayKey
+        var streak = 0
+        
+        // Check if today exists and is complete
+        if let todayRecord = records.first(where: { $0.dateKey == todayKey }) {
+            if todayRecord.isComplete {
+                streak = 1
+                currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
+            } else {
+                // Today exists but incomplete, start from yesterday
+                currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
+            }
+        } else {
+            // No record for today, start from yesterday
+            currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
+        }
+        
+        // Continue counting backwards
+        while let record = records.first(where: { $0.dateKey == currentDate }) {
+            if record.isComplete {
+                streak += 1
+                currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
+            } else {
+                break
+            }
+        }
+        
+        return streak
+    }
+    
+    /// Calculates the longest streak in history
+    /// - Parameters:
+    ///   - records: Array of DayRecords sorted by dateKey
+    ///   - calendar: Calendar to use
+    /// - Returns: Longest streak count
+    func longestStreak(records: [DayRecord], calendar: Calendar = .current) -> Int {
+        guard !records.isEmpty else { return 0 }
+        
+        var maxStreak = 0
+        var currentStreak = 0
+        var previousDate: Date?
+        
+        for record in records where record.isComplete {
+            if let prevDate = previousDate {
+                // Check if this record is consecutive (1 day after previous)
+                if let nextDay = calendar.date(byAdding: .day, value: 1, to: prevDate),
+                   calendar.isDate(nextDay, inSameDayAs: record.dateKey) {
+                    currentStreak += 1
+                } else {
+                    // Streak broken, start new streak
+                    maxStreak = max(maxStreak, currentStreak)
+                    currentStreak = 1
+                }
+            } else {
+                // First completed day
+                currentStreak = 1
+            }
+            
+            previousDate = record.dateKey
+        }
+        
+        // Don't forget to check the final streak
+        maxStreak = max(maxStreak, currentStreak)
+        
+        return maxStreak
+    }
 }

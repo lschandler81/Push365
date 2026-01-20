@@ -52,7 +52,9 @@ struct SettingsView: View {
                 ProgressView()
                     .task {
                         // Initialize settings on first load
-                        _ = try? progressStore.getOrCreateSettings(modelContext: modelContext)
+                        try? await Task {
+                            _ = try progressStore.getOrCreateSettings(modelContext: modelContext)
+                        }.value
                     }
             }
         }
