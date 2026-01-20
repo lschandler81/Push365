@@ -13,6 +13,7 @@ struct SettingsView: View {
     @Query private var settings: [UserSettings]
     
     private let progressStore = ProgressStore()
+    private let notificationManager = NotificationManager()
     
     private var userSettings: UserSettings? {
         // Return existing settings if found
@@ -23,6 +24,28 @@ struct SettingsView: View {
         NavigationStack {
             if let userSettings {
                 List {
+                    Section("Notifications") {
+                        Toggle("Enable Notifications", isOn: Binding(
+                            get: { userSettings.notificationsEnabled },
+                            set: { newValue in
+                                userSettings.notificationsEnabled = newValue
+                                handleNotificationToggle(enabled: newValue, settings: userSettings)
+                            }
+                        ))
+                        
+                        if userSettings.notificationsEnabled {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Morning: \(formatTime(hour: userSettings.morningHour, minute: userSettings.morningMinute))")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                
+                                Text("Reminder: \(formatTime(hour: userSettings.reminderHour, minute: userSettings.reminderMinute))")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    
                     Section("Display") {
                         Picker("Date Format", selection: Binding(
                             get: { userSettings.dateFormatPreference },
@@ -58,6 +81,33 @@ struct SettingsView: View {
                     }
             }
         }
+    }
+    
+    // MARK: - Helpers
+    
+    private func handleNotificationToggle(enabled: Bool, settings: UserSettings) {
+        if enabled {
+            // Reschedule today's notifications
+            Task {
+                do {
+                    let today = try progressStore.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
+                    notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
+                } catch {
+                    print("Error scheduling notifications: \(error)")
+                }
+            }
+        } else {
+            // Cancel all notifications
+            notificationManager.cancelAllNotifications()
+        }
+    }
+    
+    private func formatTime(hour: Int, minute: Int) -> String {
+        let components = DateComponents(hour: hour, minute: minute)
+        let date = Calendar.current.date(from: components) ?? Date()
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 

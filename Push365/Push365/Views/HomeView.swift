@@ -21,6 +21,7 @@ struct HomeView: View {
     // Services
     private let store = ProgressStore()
     private let motivation = MotivationService()
+    private let notificationManager = NotificationManager()
     
     var body: some View {
         NavigationStack {
@@ -203,6 +204,14 @@ struct HomeView: View {
             settings = try store.getOrCreateSettings(modelContext: modelContext)
             today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
             errorMessage = nil
+            
+            // Request notification permission (non-blocking)
+            _ = await notificationManager.requestPermission()
+            
+            // Schedule today's notifications
+            if let settings = settings, let today = today {
+                notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
+            }
         } catch {
             errorMessage = "Error loading data: \(error.localizedDescription)"
         }
@@ -216,6 +225,11 @@ struct HomeView: View {
             // Refresh today's record
             today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
             errorMessage = nil
+            
+            // Reschedule notifications with updated remaining count
+            if let settings = settings, let today = today {
+                notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
+            }
         } catch {
             errorMessage = "Error logging: \(error.localizedDescription)"
         }
@@ -227,6 +241,11 @@ struct HomeView: View {
             // Refresh today's record
             today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
             errorMessage = nil
+            
+            // Reschedule notifications with updated remaining count
+            if let settings = settings, let today = today {
+                notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
+            }
         } catch {
             errorMessage = "Error undoing: \(error.localizedDescription)"
         }
