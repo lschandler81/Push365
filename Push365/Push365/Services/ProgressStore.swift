@@ -91,21 +91,29 @@ final class ProgressStore {
     
     /// Adds a log entry for the specified date
     /// - Parameters:
-    ///   - amount: Number of push-ups (will be clamped to minimum of 1)
+    ///   - amount: Number of push-ups (will be clamped to remaining capacity)
     ///   - date: The date to log for (defaults to now)
     ///   - modelContext: The SwiftData model context
     /// - Throws: SwiftData errors
     func addLog(amount: Int, date: Date = Date(), modelContext: ModelContext) throws {
-        // Clamp amount to minimum of 1
-        let validAmount = max(1, amount)
-        
         // Get or create the day record
         let record = try getOrCreateDayRecord(for: date, modelContext: modelContext)
+        
+        // Calculate remaining capacity
+        let remaining = max(0, record.target - record.completed)
+        
+        // If target already met, do nothing
+        guard remaining > 0 else {
+            return
+        }
+        
+        // Cap amount to remaining capacity
+        let amountToLog = min(max(1, amount), remaining)
         
         // Create log entry
         let logEntry = LogEntry(
             timestamp: Date(),
-            amount: validAmount,
+            amount: amountToLog,
             dayRecord: record
         )
         

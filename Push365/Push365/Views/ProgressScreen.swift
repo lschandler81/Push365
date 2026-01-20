@@ -25,12 +25,12 @@ struct ProgressScreen: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: DSSpacing.l) {
                     // Streaks Section
-                    VStack(spacing: 16) {
+                    VStack(spacing: DSSpacing.m) {
                         Text("Streaks")
-                            .font(.title2)
-                            .fontWeight(.semibold)
+                            .font(DSFont.sectionHeader)
+                            .foregroundStyle(DSColor.textPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal)
                         
@@ -55,10 +55,10 @@ struct ProgressScreen: View {
                     }
                     
                     // Totals Section
-                    VStack(spacing: 16) {
+                    VStack(spacing: DSSpacing.m) {
                         Text("Totals")
-                            .font(.title2)
-                            .fontWeight(.semibold)
+                            .font(DSFont.sectionHeader)
+                            .foregroundStyle(DSColor.textPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal)
                         
@@ -78,10 +78,10 @@ struct ProgressScreen: View {
                                 icon: "infinity"
                             )
                         }
-                        .padding(.vertical, 8)
+                        .padding(.vertical, DSSpacing.s)
                         .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(.systemBackground))
+                            RoundedRectangle(cornerRadius: DSRadius.card)
+                                .fill(DSColor.surface)
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
                         )
                         .padding(.horizontal)
@@ -90,9 +90,9 @@ struct ProgressScreen: View {
                     // Last Updated
                     if let settings = settings {
                         Text("Last updated: \(DateDisplayFormatter.shortDateString(for: lastUpdated, preference: settings.dateFormatPreference))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 8)
+                            .font(DSFont.caption)
+                            .foregroundStyle(DSColor.textSecondary)
+                            .padding(.top, DSSpacing.s)
                     }
                 }
                 .padding(.vertical)
@@ -151,25 +151,25 @@ struct StatCard: View {
                 .foregroundStyle(color)
             
             Text(value)
-                .font(.system(size: 42, weight: .bold))
-                .foregroundStyle(.primary)
+                .font(DSFont.largeNumber)
+                .foregroundStyle(DSColor.textPrimary)
             
             VStack(spacing: 4) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(DSFont.subheadline)
                     .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DSColor.textSecondary)
                 
                 Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DSFont.caption)
+                    .foregroundStyle(DSColor.textSecondary)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
+        .padding(.vertical, DSSpacing.l)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+            RoundedRectangle(cornerRadius: DSRadius.card)
+                .fill(DSColor.surface)
                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
         )
     }
@@ -184,22 +184,22 @@ struct TotalRow: View {
         HStack {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DSColor.textSecondary)
                 .frame(width: 30)
             
             Text(title)
-                .font(.headline)
-                .foregroundStyle(.primary)
+                .font(DSFont.button)
+                .foregroundStyle(DSColor.textPrimary)
             
             Spacer()
             
             Text("\(value)")
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundStyle(.primary)
+                .font(DSFont.mediumNumber)
+                .foregroundStyle(DSColor.textPrimary)
             
             Text("push-ups")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(DSFont.subheadline)
+                .foregroundStyle(DSColor.textSecondary)
         }
         .padding(.horizontal)
     }

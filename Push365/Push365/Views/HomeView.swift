@@ -26,30 +26,30 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: DSSpacing.l) {
                     if let today = today, let settings = settings {
                         // Header Section
-                        VStack(spacing: 8) {
+                        VStack(spacing: DSSpacing.s) {
                             Text("Day \(today.dayNumber)")
-                                .font(.system(size: 48, weight: .bold))
-                                .foregroundStyle(.primary)
+                                .font(DSFont.dayTitle)
+                                .foregroundStyle(DSColor.textPrimary)
                             
                             Text(DateDisplayFormatter.headerString(for: Date(), preference: settings.dateFormatPreference))
-                                .font(.headline)
-                                .foregroundStyle(.secondary)
+                                .font(DSFont.subheadline)
+                                .foregroundStyle(DSColor.textSecondary)
                         }
                         .padding(.top, 20)
                         
                         // Target Card
-                        VStack(spacing: 16) {
+                        VStack(spacing: DSSpacing.m) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Target")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                        .font(DSFont.subheadline)
+                                        .foregroundStyle(DSColor.textSecondary)
                                     Text("\(today.target)")
-                                        .font(.system(size: 36, weight: .semibold))
-                                        .foregroundStyle(.primary)
+                                        .font(DSFont.targetNumber)
+                                        .foregroundStyle(DSColor.textPrimary)
                                 }
                                 
                                 Spacer()
@@ -58,36 +58,36 @@ struct HomeView: View {
                                     VStack {
                                         Image(systemName: "checkmark.circle.fill")
                                             .font(.system(size: 44))
-                                            .foregroundStyle(.green)
+                                            .foregroundStyle(DSColor.success)
                                         Text("Complete")
-                                            .font(.caption)
-                                            .foregroundStyle(.green)
+                                            .font(DSFont.caption)
+                                            .foregroundStyle(DSColor.success)
                                     }
                                 }
                             }
                             
                             // Progress Bar
-                            VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: DSSpacing.s) {
                                 ProgressView(value: Double(today.completed), total: Double(today.target))
                                     .progressViewStyle(.linear)
-                                    .tint(today.isComplete ? .green : Color.accentColor)
+                                    .tint(today.isComplete ? DSColor.success : DSColor.primary)
                                     .scaleEffect(y: 2)
                                 
                                 HStack {
                                     Text("Completed: \(today.completed)")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                        .font(DSFont.subheadline)
+                                        .foregroundStyle(DSColor.textSecondary)
                                     Spacer()
                                     Text("Remaining: \(today.remaining)")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                        .font(DSFont.subheadline)
+                                        .foregroundStyle(DSColor.textSecondary)
                                 }
                             }
                         }
-                        .padding()
+                        .padding(DSSpacing.m)
                         .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(.systemBackground))
+                            RoundedRectangle(cornerRadius: DSRadius.card)
+                                .fill(DSColor.surface)
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
                         )
                         .padding(.horizontal)
@@ -96,14 +96,15 @@ struct HomeView: View {
                         Text(motivation.line(forDay: today.dayNumber))
                             .font(.callout)
                             .italic()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DSColor.textSecondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                         
                         // Quick Log Buttons
                         VStack(spacing: 12) {
                             Text("Log Push-ups")
-                                .font(.headline)
+                                .font(DSFont.sectionHeader)
+                                .foregroundStyle(DSColor.textPrimary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal)
                             
@@ -111,12 +112,15 @@ struct HomeView: View {
                                 QuickLogButton(amount: 5) {
                                     logPushups(amount: 5)
                                 }
+                                .disabled(today.isComplete)
                                 QuickLogButton(amount: 10) {
                                     logPushups(amount: 10)
                                 }
+                                .disabled(today.isComplete)
                                 QuickLogButton(amount: 20) {
                                     logPushups(amount: 20)
                                 }
+                                .disabled(today.isComplete)
                             }
                             .padding(.horizontal)
                             
@@ -127,13 +131,14 @@ struct HomeView: View {
                                     Image(systemName: "plus.circle")
                                     Text("Custom Amount")
                                 }
-                                .font(.headline)
+                                .font(DSFont.button)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Color.accentColor.opacity(0.1))
-                                .foregroundStyle(Color.accentColor)
-                                .cornerRadius(12)
+                                .background(DSColor.primary.opacity(0.1))
+                                .foregroundStyle(DSColor.primary)
+                                .cornerRadius(DSRadius.button)
                             }
+                            .disabled(today.isComplete)
                             .padding(.horizontal)
                         }
                         
@@ -144,17 +149,17 @@ struct HomeView: View {
                                     Image(systemName: "arrow.uturn.backward")
                                     Text("Undo Last Log")
                                 }
-                                .font(.subheadline)
-                                .foregroundStyle(.red)
+                                .font(DSFont.subheadline)
+                                .foregroundStyle(DSColor.destructive)
                             }
-                            .padding(.top, 8)
+                            .padding(.top, DSSpacing.s)
                         }
                         
-                        // Extra reps note
+                        // Completion message
                         if today.isComplete {
-                            Text("Extra reps count toward your total")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            Text("Done for today ✅")
+                                .font(DSFont.caption)
+                                .foregroundStyle(DSColor.success)
                                 .padding(.top, 4)
                         }
                         
@@ -167,8 +172,8 @@ struct HomeView: View {
                     // Error Message
                     if let errorMessage = errorMessage {
                         Text(errorMessage)
-                            .font(.caption)
-                            .foregroundStyle(.red)
+                            .font(DSFont.caption)
+                            .foregroundStyle(DSColor.destructive)
                             .padding()
                     }
                 }
@@ -266,9 +271,9 @@ struct QuickLogButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 20)
-            .background(Color.accentColor)
+            .background(DSColor.primary)
             .foregroundStyle(.white)
-            .cornerRadius(12)
+            .cornerRadius(DSRadius.button)
         }
     }
 }
@@ -282,7 +287,8 @@ struct CustomAmountSheet: View {
         NavigationStack {
             VStack(spacing: 20) {
                 Text("Enter the number of push-ups")
-                    .font(.headline)
+                    .font(DSFont.button)
+                    .foregroundStyle(DSColor.textPrimary)
                     .padding(.top)
                 
                 TextField("Amount", text: $amountText)
@@ -294,12 +300,12 @@ struct CustomAmountSheet: View {
                 
                 Button(action: onSave) {
                     Text("Save")
-                        .font(.headline)
+                        .font(DSFont.button)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.accentColor)
+                        .background(DSColor.primary)
                         .foregroundStyle(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(DSRadius.button)
                 }
                 .padding(.horizontal)
                 .disabled(Int(amountText) == nil || Int(amountText) ?? 0 < 1)

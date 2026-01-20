@@ -36,12 +36,12 @@ struct SettingsView: View {
                         if userSettings.notificationsEnabled {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Morning: \(formatTime(hour: userSettings.morningHour, minute: userSettings.morningMinute))")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .font(DSFont.subheadline)
+                                    .foregroundStyle(DSColor.textSecondary)
                                 
                                 Text("Reminder: \(formatTime(hour: userSettings.reminderHour, minute: userSettings.reminderMinute))")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .font(DSFont.subheadline)
+                                    .foregroundStyle(DSColor.textSecondary)
                             }
                         }
                     }
@@ -62,11 +62,12 @@ struct SettingsView: View {
                     Section("Preview") {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Current format:")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .font(DSFont.caption)
+                                .foregroundStyle(DSColor.textSecondary)
                             
                             Text(DateDisplayFormatter.shortDateString(for: Date(), preference: userSettings.dateFormatPreference))
-                                .font(.body)
+                                .font(DSFont.body)
+                                .foregroundStyle(DSColor.textPrimary)
                         }
                     }
                 }
