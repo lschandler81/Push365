@@ -111,6 +111,42 @@ struct SettingsView: View {
                         )
                         .padding(.horizontal, 20)
                         
+                        // Progress Mode Card
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Progress Mode")
+                                .font(DSFont.sectionHeader)
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .textCase(.uppercase)
+                                .tracking(1)
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                Picker("Progress Mode", selection: Binding(
+                                    get: { userSettings.mode },
+                                    set: { newMode in
+                                        userSettings.mode = newMode
+                                        try? modelContext.save()
+                                    }
+                                )) {
+                                    ForEach(ProgressMode.allCases) { mode in
+                                        Text(mode.displayName).tag(mode)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .labelsHidden()
+                                
+                                Text(userSettings.mode.shortDescription)
+                                    .font(DSFont.caption)
+                                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: DSRadius.card)
+                                .fill(DSColor.surface)
+                        )
+                        .padding(.horizontal, 20)
+                        
                         // Display Card
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Display")

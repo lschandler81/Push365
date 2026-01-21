@@ -26,9 +26,29 @@ enum DateFormatPreference: String, CaseIterable, Identifiable {
 }
 
 /// Mode preference for push-up progression
-enum ProgressMode: String, CaseIterable {
+enum ProgressMode: String, Codable, CaseIterable, Identifiable {
     case strict
-    // Future: case flexible
+    case flexible
+    
+    var id: String { rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .strict:
+            return "Strict Mode"
+        case .flexible:
+            return "Flexible Mode"
+        }
+    }
+    
+    var shortDescription: String {
+        switch self {
+        case .strict:
+            return "Target increases daily. Failure resets progress."
+        case .flexible:
+            return "Target increases when you're ready. No resets."
+        }
+    }
 }
 
 @Model
@@ -97,7 +117,7 @@ final class UserSettings {
     /// Computed property for type-safe progress mode
     var mode: ProgressMode {
         get {
-            ProgressMode(rawValue: modeRaw) ?? .strict
+            ProgressMode(rawValue: modeRaw) ?? .flexible
         }
         set {
             modeRaw = newValue.rawValue
@@ -110,7 +130,7 @@ final class UserSettings {
         id: UUID = UUID(),
         createdAt: Date = Date(),
         startDate: Date,
-        modeRaw: String = "strict",
+        modeRaw: String = "flexible",
         notificationsEnabled: Bool = true,
         morningHour: Int = 8,
         morningMinute: Int = 0,
