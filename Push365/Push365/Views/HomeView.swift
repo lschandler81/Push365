@@ -97,6 +97,18 @@ struct HomeView: View {
                             Spacer()
                                 .frame(height: adaptiveSpacing(for: geometry, base: 28))
                             
+                            // Streak indicator (small and calm)
+                            HStack(spacing: 6) {
+                                Text("Streak: \(settings.currentStreak)")
+                                    .font(.system(size: 13, weight: .medium))
+                                Text("•")
+                                    .font(.system(size: 13))
+                                Text("Best: \(settings.longestStreak)")
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                            .padding(.bottom, 8)
+                            
                             // Remaining stat (only if not complete)
                             if !today.isComplete {
                                 VStack(spacing: 4) {

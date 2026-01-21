@@ -54,7 +54,11 @@ final class ProgressStore {
     /// - Throws: SwiftData errors
     func getOrCreateDayRecord(for date: Date, modelContext: ModelContext) throws -> DayRecord {
         // Get settings to calculate day number and target
-        let settings = try getOrCreateSettings(modelContext: modelContext)
+        var settings = try getOrCreateSettings(modelContext: modelContext)
+        
+        // Evaluate missed days and update streak if necessary
+        StreakCalculator.evaluateMissedDays(today: date, settings: &settings, calendar: .current)
+        try modelContext.save()
         
         // Normalize date to start-of-day
         let dateKey = DayCalculator.dateKey(for: date)
@@ -99,6 +103,9 @@ final class ProgressStore {
         // Get or create the day record
         let record = try getOrCreateDayRecord(for: date, modelContext: modelContext)
         
+        // Track completion state before logging
+        let wasComplete = record.isComplete
+        
         // Calculate remaining capacity
         let remaining = max(0, record.target - record.completed)
         
@@ -122,6 +129,12 @@ final class ProgressStore {
         
         // Recompute completed
         recomputeCompleted(for: record)
+        
+        // If day just became complete, record completion for streak
+        if !wasComplete && record.isComplete {
+            var settings = try getOrCreateSettings(modelContext: modelContext)
+            StreakCalculator.recordCompletion(for: date, settings: &settings, calendar: .current)
+        }
         
         try modelContext.save()
     }
@@ -148,6 +161,11 @@ final class ProgressStore {
         
         // Recompute completed
         recomputeCompleted(for: record)
+        
+        // Note: v1 behavior - we do NOT roll back streak history when undoing.
+        // Streak is based on completion events; retroactive changes are not applied.
+        // If a day becomes incomplete after undo, the streak remains as-is until
+        // the next evaluation or completion event.
         
         try modelContext.save()
     }

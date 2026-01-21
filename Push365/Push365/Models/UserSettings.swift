@@ -50,6 +50,12 @@ final class UserSettings {
     // Display
     var dateFormatPreferenceRaw: String
     
+    // Streak tracking
+    var currentStreak: Int
+    var longestStreak: Int
+    var lastCompletedDateKey: Date?
+    var lastStreakEvaluatedDateKey: Date?
+    
     // MARK: - Computed Properties
     
     /// Morning notification time as Date (today at specified hour/minute)
@@ -110,7 +116,11 @@ final class UserSettings {
         morningMinute: Int = 0,
         reminderHour: Int = 18,
         reminderMinute: Int = 0,
-        dateFormatPreferenceRaw: String = "automatic"
+        dateFormatPreferenceRaw: String = "automatic",
+        currentStreak: Int = 0,
+        longestStreak: Int = 0,
+        lastCompletedDateKey: Date? = nil,
+        lastStreakEvaluatedDateKey: Date? = nil
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -122,5 +132,9 @@ final class UserSettings {
         self.reminderHour = reminderHour
         self.reminderMinute = reminderMinute
         self.dateFormatPreferenceRaw = dateFormatPreferenceRaw
+        self.currentStreak = currentStreak
+        self.longestStreak = longestStreak
+        self.lastCompletedDateKey = lastCompletedDateKey
+        self.lastStreakEvaluatedDateKey = lastStreakEvaluatedDateKey
     }
 }

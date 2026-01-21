@@ -122,10 +122,11 @@ struct ProgressScreen: View {
             // Fetch all records
             let records = try store.allRecords(modelContext: modelContext)
             
-            // Calculate streaks
-            let todayKey = DayCalculator.dateKey(for: Date())
-            currentStreak = store.currentStreak(records: records, todayKey: todayKey)
-            longestStreak = store.longestStreak(records: records)
+            // Get streaks from settings (source of truth)
+            if let settings = settings {
+                currentStreak = settings.currentStreak
+                longestStreak = settings.longestStreak
+            }
             
             // Calculate totals
             let totals = store.totals(records: records)
