@@ -13,6 +13,9 @@ enum DSColor {
     /// Primary action blue - #2F6FE4 (light), lighter variant (dark)
     static let primary = Color("DSPrimary")
     
+    /// Accent color (alias for primary)
+    static let accent = Color("DSPrimary")
+    
     /// Success/completion green - #4FAE8A (light), darker variant (dark)
     static let success = Color("DSSuccess")
     
@@ -24,6 +27,9 @@ enum DSColor {
     
     /// Card/surface background - #FFFFFF (light), #1A1D23 (dark)
     static let surface = Color("DSSurface")
+    
+    /// Overlay background (alias for surface)
+    static let overlay = Color("DSSurface")
     
     /// Primary text color - #1C1E21 (light), #E5E7EB (dark)
     static let textPrimary = Color("DSTextPrimary")
@@ -90,6 +96,9 @@ enum DSRadius {
     
     /// Button corner radius - 12pt
     static let button: CGFloat = 12
+    
+    /// Pill/capsule radius - 20pt
+    static let pill: CGFloat = 20
     
     /// Small elements - 8pt
     static let small: CGFloat = 8

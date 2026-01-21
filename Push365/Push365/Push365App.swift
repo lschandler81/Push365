@@ -45,6 +45,7 @@ struct Push365App: App {
     var body: some Scene {
         WindowGroup {
             MainTabView()
+                .preferredColorScheme(.dark)
         }
         .modelContainer(modelContainer)
     }
