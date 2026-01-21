@@ -63,7 +63,7 @@ struct CircularProgressRing: View {
             }
             .frame(width: ringSize, height: ringSize)
             .rotationEffect(.degrees(-90))
-            .blur(radius: 12)
+            .blur(radius: 10)
 
             // Ambient full-ring glow (very subtle, always on)
             Circle()
@@ -109,7 +109,7 @@ struct CircularProgressRing: View {
                             AngularGradient(
                                 gradient: Gradient(stops: [
                                     .init(color: electricBlue, location: 0.00),
-                                    .init(color: electricBlueBright, location: 0.35),
+                                    .init(color: electricBlueBright, location: 0.30),
                                     .init(color: electricBlue, location: 1.00)
                                 ]),
                                 center: .center
@@ -123,7 +123,7 @@ struct CircularProgressRing: View {
                             AngularGradient(
                                 gradient: Gradient(stops: [
                                     .init(color: electricBlue, location: 0.00),
-                                    .init(color: electricBlueBright, location: 0.35),
+                                    .init(color: electricBlueBright, location: 0.30),
                                     .init(color: electricBlue, location: 1.00)
                                 ]),
                                 center: .center
