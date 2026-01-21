@@ -25,14 +25,16 @@ struct ProgressScreen: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DSSpacing.l) {
+                VStack(spacing: 28) {
                     // Streaks Section
-                    VStack(spacing: DSSpacing.m) {
+                    VStack(spacing: 16) {
                         Text("Streaks")
                             .font(DSFont.sectionHeader)
-                            .foregroundStyle(DSColor.textPrimary)
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.8))
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal)
+                            .textCase(.uppercase)
+                            .tracking(1)
+                            .padding(.horizontal, 20)
                         
                         HStack(spacing: 16) {
                             StatCard(
@@ -40,7 +42,7 @@ struct ProgressScreen: View {
                                 value: "\(currentStreak)",
                                 subtitle: currentStreak == 1 ? "day" : "days",
                                 icon: "flame.fill",
-                                color: .orange
+                                color: DSColor.accent
                             )
                             
                             StatCard(
@@ -48,21 +50,23 @@ struct ProgressScreen: View {
                                 value: "\(longestStreak)",
                                 subtitle: longestStreak == 1 ? "day" : "days",
                                 icon: "trophy.fill",
-                                color: .yellow
+                                color: Color(red: 1.0, green: 0.8, blue: 0.4)
                             )
                         }
-                        .padding(.horizontal)
+                        .padding(.horizontal, 20)
                     }
                     
                     // Totals Section
-                    VStack(spacing: DSSpacing.m) {
+                    VStack(spacing: 16) {
                         Text("Totals")
                             .font(DSFont.sectionHeader)
-                            .foregroundStyle(DSColor.textPrimary)
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.8))
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal)
+                            .textCase(.uppercase)
+                            .tracking(1)
+                            .padding(.horizontal, 20)
                         
-                        VStack(spacing: 12) {
+                        VStack(spacing: 0) {
                             TotalRow(
                                 title: "Year-to-Date",
                                 value: yearToDateTotal,
@@ -70,7 +74,8 @@ struct ProgressScreen: View {
                             )
                             
                             Divider()
-                                .padding(.horizontal)
+                                .background(DSColor.textSecondary.opacity(0.2))
+                                .padding(.horizontal, 20)
                             
                             TotalRow(
                                 title: "Lifetime",
@@ -78,26 +83,26 @@ struct ProgressScreen: View {
                                 icon: "infinity"
                             )
                         }
-                        .padding(.vertical, DSSpacing.s)
                         .background(
                             RoundedRectangle(cornerRadius: DSRadius.card)
                                 .fill(DSColor.surface)
-                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
                         )
-                        .padding(.horizontal)
+                        .padding(.horizontal, 20)
                     }
                     
                     // Last Updated
                     if let settings = settings {
                         Text("Last updated: \(DateDisplayFormatter.shortDateString(for: lastUpdated, preference: settings.dateFormatPreference))")
                             .font(DSFont.caption)
-                            .foregroundStyle(DSColor.textSecondary)
-                            .padding(.top, DSSpacing.s)
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                            .padding(.top, 8)
                     }
                 }
-                .padding(.vertical)
+                .padding(.vertical, 24)
             }
+            .background(DSColor.background.ignoresSafeArea())
             .navigationTitle("Progress")
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .task {
                 await loadProgress()
             }
@@ -145,32 +150,30 @@ struct StatCard: View {
     let color: Color
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.system(size: 32))
+                .font(.system(size: 36))
                 .foregroundStyle(color)
             
             Text(value)
                 .font(DSFont.largeNumber)
                 .foregroundStyle(DSColor.textPrimary)
             
-            VStack(spacing: 4) {
+            VStack(spacing: 2) {
                 Text(title)
                     .font(DSFont.subheadline)
-                    .fontWeight(.medium)
                     .foregroundStyle(DSColor.textSecondary)
                 
                 Text(subtitle)
                     .font(DSFont.caption)
-                    .foregroundStyle(DSColor.textSecondary)
+                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, DSSpacing.l)
+        .padding(.vertical, 28)
         .background(
             RoundedRectangle(cornerRadius: DSRadius.card)
                 .fill(DSColor.surface)
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
         )
     }
 }
@@ -181,11 +184,11 @@ struct TotalRow: View {
     let icon: String
     
     var body: some View {
-        HStack {
+        HStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(DSColor.textSecondary)
-                .frame(width: 30)
+                .font(.system(size: 20))
+                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                .frame(width: 28)
             
             Text(title)
                 .font(DSFont.button)
@@ -193,15 +196,18 @@ struct TotalRow: View {
             
             Spacer()
             
-            Text("\(value)")
-                .font(DSFont.mediumNumber)
-                .foregroundStyle(DSColor.textPrimary)
-            
-            Text("push-ups")
-                .font(DSFont.subheadline)
-                .foregroundStyle(DSColor.textSecondary)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(value)")
+                    .font(DSFont.mediumNumber)
+                    .foregroundStyle(DSColor.textPrimary)
+                
+                Text("push-ups")
+                    .font(DSFont.caption)
+                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+            }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 20)
     }
 }
 

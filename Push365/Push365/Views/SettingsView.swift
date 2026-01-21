@@ -16,66 +16,161 @@ struct SettingsView: View {
     private let notificationManager = NotificationManager()
     
     private var userSettings: UserSettings? {
-        // Return existing settings if found
         settings.first
     }
     
     var body: some View {
         NavigationStack {
             if let userSettings {
-                List {
-                    Section("Notifications") {
-                        Toggle("Enable Notifications", isOn: Binding(
-                            get: { userSettings.notificationsEnabled },
-                            set: { newValue in
-                                userSettings.notificationsEnabled = newValue
-                                handleNotificationToggle(enabled: newValue, settings: userSettings)
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // Notifications Card
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Notifications")
+                                .font(DSFont.sectionHeader)
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .textCase(.uppercase)
+                                .tracking(1)
+                            
+                            Toggle("Enable Notifications", isOn: Binding(
+                                get: { userSettings.notificationsEnabled },
+                                set: { newValue in
+                                    userSettings.notificationsEnabled = newValue
+                                    handleNotificationToggle(enabled: newValue, settings: userSettings)
+                                }
+                            ))
+                            .tint(DSColor.accent)
+                            .font(DSFont.button)
+                            .foregroundStyle(DSColor.textPrimary)
+                            
+                            if userSettings.notificationsEnabled {
+                                Divider()
+                                    .background(DSColor.textSecondary.opacity(0.2))
+                                
+                                VStack(spacing: 12) {
+                                    HStack {
+                                        Image(systemName: "sun.max.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundStyle(Color.orange.opacity(0.9))
+                                            .frame(width: 28)
+                                        
+                                        Text("Morning:")
+                                            .font(DSFont.subheadline)
+                                            .foregroundStyle(DSColor.textSecondary)
+                                        
+                                        Spacer()
+                                        
+                                        Text(formatTime(hour: userSettings.morningHour, minute: userSettings.morningMinute))
+                                            .font(DSFont.button)
+                                            .foregroundStyle(DSColor.textPrimary)
+                                            .monospacedDigit()
+                                    }
+                                    
+                                    HStack {
+                                        Image(systemName: "moon.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundStyle(Color.blue.opacity(0.8))
+                                            .frame(width: 28)
+                                        
+                                        Text("Reminder:")
+                                            .font(DSFont.subheadline)
+                                            .foregroundStyle(DSColor.textSecondary)
+                                        
+                                        Spacer()
+                                        
+                                        Text(formatTime(hour: userSettings.reminderHour, minute: userSettings.reminderMinute))
+                                            .font(DSFont.button)
+                                            .foregroundStyle(DSColor.textPrimary)
+                                            .monospacedDigit()
+                                    }
+                                }
                             }
-                        ))
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: DSRadius.card)
+                                .fill(DSColor.surface)
+                        )
+                        .padding(.horizontal, 20)
                         
-                        if userSettings.notificationsEnabled {
+                        // Display Card
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Display")
+                                .font(DSFont.sectionHeader)
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .textCase(.uppercase)
+                                .tracking(1)
+                            
+                            // Date Format Picker
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Morning: \(formatTime(hour: userSettings.morningHour, minute: userSettings.morningMinute))")
+                                Text("Date Format")
                                     .font(DSFont.subheadline)
                                     .foregroundStyle(DSColor.textSecondary)
                                 
-                                Text("Reminder: \(formatTime(hour: userSettings.reminderHour, minute: userSettings.reminderMinute))")
-                                    .font(DSFont.subheadline)
-                                    .foregroundStyle(DSColor.textSecondary)
+                                Menu {
+                                    ForEach(DateFormatPreference.allCases) { preference in
+                                        Button(action: {
+                                            userSettings.dateFormatPreference = preference
+                                        }) {
+                                            HStack {
+                                                Text(preference.displayName)
+                                                if userSettings.dateFormatPreference == preference {
+                                                    Spacer()
+                                                    Image(systemName: "checkmark")
+                                                }
+                                            }
+                                        }
+                                    }
+                                } label: {
+                                    HStack {
+                                        Text(userSettings.dateFormatPreference.displayName)
+                                            .font(DSFont.button)
+                                            .foregroundStyle(DSColor.textPrimary)
+                                        Spacer()
+                                        Image(systemName: "chevron.up.chevron.down")
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(DSColor.textSecondary)
+                                    }
+                                    .padding(12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(DSColor.background)
+                                    )
+                                }
                             }
-                        }
-                    }
-                    
-                    Section("Display") {
-                        Picker("Date Format", selection: Binding(
-                            get: { userSettings.dateFormatPreference },
-                            set: { userSettings.dateFormatPreference = $0 }
-                        )) {
-                            ForEach(DateFormatPreference.allCases) { preference in
-                                Text(preference.displayName)
-                                    .tag(preference)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                    }
-                    
-                    Section("Preview") {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Current format:")
-                                .font(DSFont.caption)
-                                .foregroundStyle(DSColor.textSecondary)
                             
-                            Text(DateDisplayFormatter.shortDateString(for: Date(), preference: userSettings.dateFormatPreference))
-                                .font(DSFont.body)
-                                .foregroundStyle(DSColor.textPrimary)
+                            Divider()
+                                .background(DSColor.textSecondary.opacity(0.2))
+                            
+                            // Preview
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Preview")
+                                    .font(DSFont.caption)
+                                    .foregroundStyle(DSColor.textSecondary)
+                                
+                                Text(DateDisplayFormatter.shortDateString(for: Date(), preference: userSettings.dateFormatPreference))
+                                    .font(DSFont.button)
+                                    .foregroundStyle(DSColor.textPrimary)
+                            }
                         }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: DSRadius.card)
+                                .fill(DSColor.surface)
+                        )
+                        .padding(.horizontal, 20)
                     }
+                    .padding(.vertical, 24)
                 }
+                .background(DSColor.background.ignoresSafeArea())
                 .navigationTitle("Settings")
+                .toolbarColorScheme(.dark, for: .navigationBar)
             } else {
                 ProgressView()
+                    .tint(DSColor.accent)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(DSColor.background)
                     .task {
-                        // Initialize settings on first load
                         try? await Task {
                             _ = try progressStore.getOrCreateSettings(modelContext: modelContext)
                         }.value
@@ -88,7 +183,6 @@ struct SettingsView: View {
     
     private func handleNotificationToggle(enabled: Bool, settings: UserSettings) {
         if enabled {
-            // Reschedule today's notifications
             Task {
                 do {
                     let today = try progressStore.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
@@ -98,7 +192,6 @@ struct SettingsView: View {
                 }
             }
         } else {
-            // Cancel all notifications
             notificationManager.cancelAllNotifications()
         }
     }
