@@ -17,6 +17,7 @@ struct HomeView: View {
     @State private var errorMessage: String?
     @State private var showingCustomSheet = false
     @State private var customAmountText = ""
+    @State private var wasComplete = false
     
     // Services
     private let store = ProgressStore()
@@ -25,161 +26,204 @@ struct HomeView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: DSSpacing.l) {
-                    if let today = today, let settings = settings {
-                        // Header Section
-                        VStack(spacing: DSSpacing.s) {
-                            Text("Day \(today.dayNumber)")
-                                .font(DSFont.dayTitle)
-                                .foregroundStyle(DSColor.textPrimary)
+            GeometryReader { geometry in
+                ZStack {
+                    // Base dark blue background
+                    Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
+                        .ignoresSafeArea()
+                    
+                    // Ring-centered spotlight (stronger focus)
+                    RadialGradient(
+                        gradient: Gradient(colors: [
+                            Color(red: 0x2A/255, green: 0x38/255, blue: 0x50/255).opacity(0.9),
+                            Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
+                        ]),
+                        center: .center,
+                        startRadius: 50,
+                        endRadius: 300
+                    )
+                    .ignoresSafeArea()
+                    
+                    VStack(spacing: 0) {
+                        if let today = today, let settings = settings {
+                            // App title at top (background importance)
+                            Text("Push365")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.5))
+                                .textCase(.uppercase)
+                                .tracking(1.2)
+                                .padding(.top, adaptiveTopPadding(for: geometry))
                             
-                            Text(DateDisplayFormatter.headerString(for: Date(), preference: settings.dateFormatPreference))
-                                .font(DSFont.subheadline)
-                                .foregroundStyle(DSColor.textSecondary)
-                        }
-                        .padding(.top, 20)
-                        
-                        // Target Card
-                        VStack(spacing: DSSpacing.m) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Target")
-                                        .font(DSFont.subheadline)
-                                        .foregroundStyle(DSColor.textSecondary)
-                                    Text("\(today.target)")
-                                        .font(DSFont.targetNumber)
-                                        .foregroundStyle(DSColor.textPrimary)
+                            Spacer()
+                                .frame(height: adaptiveSpacing(for: geometry, base: 20))
+                            
+                            // Day number and date - the hero alongside ring
+                            VStack(spacing: 8) {
+                                Text("Day \(today.dayNumber)")
+                                    .font(DSFont.dayTitle)
+                                    .foregroundStyle(DSColor.textPrimary)
+                                
+                                Text(DateDisplayFormatter.headerString(for: Date(), preference: settings.dateFormatPreference))
+                                    .font(.subheadline)
+                                    .foregroundStyle(DSColor.textSecondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, adaptiveTopPadding(for: geometry))
+                            
+                            Spacer()
+                                .frame(height: adaptiveSpacing(for: geometry, base: 32))
+                            
+                            // Circular Progress Ring - the hero
+                            CircularProgressRing(
+                                progress: Double(today.completed) / Double(max(1, today.target)),
+                                completed: today.completed,
+                                target: today.target,
+                                isComplete: today.isComplete
+                            )
+                            .onChange(of: today.isComplete) { oldValue, newValue in
+                                if newValue && !wasComplete {
+                                    let impact = UIImpactFeedbackGenerator(style: .medium)
+                                    impact.impactOccurred()
+                                    wasComplete = true
+                                }
+                            }
+                            
+                            Spacer()
+                                .frame(height: adaptiveSpacing(for: geometry, base: 28))
+                            
+                            // Remaining stat (only if not complete)
+                            if !today.isComplete {
+                                VStack(spacing: 4) {
+                                    Text("\(today.remaining)")
+                                        .font(.system(size: 28, weight: .semibold, design: .rounded))
+                                        .monospacedDigit()
+                                        .foregroundStyle(DSColor.textPrimary.opacity(0.85))
+                                    Text("Remaining")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.5))
+                                        .textCase(.uppercase)
+                                        .tracking(0.8)
                                 }
                                 
                                 Spacer()
+                                    .frame(height: adaptiveSpacing(for: geometry, base: 16))
+                            }
+                            
+                            // Status pill (only show when complete)
+                            if today.isComplete {
+                                Text("Done for today ✅")
+                                    .font(DSFont.subheadline)
+                                    .foregroundStyle(DSColor.accent)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        Capsule()
+                                            .fill(DSColor.accent.opacity(0.15))
+                                    )
                                 
-                                if today.isComplete {
-                                    VStack {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 44))
-                                            .foregroundStyle(DSColor.success)
-                                        Text("Complete")
-                                            .font(DSFont.caption)
-                                            .foregroundStyle(DSColor.success)
+                                Spacer()
+                                    .frame(height: adaptiveSpacing(for: geometry, base: 16))
+                            }
+                            
+                            Spacer()
+                            
+                            // Quick Log Buttons (always visible)
+                            VStack(spacing: 12) {
+                                HStack(spacing: 12) {
+                                    QuickLogButton(amount: 5, isLocked: today.isComplete) {
+                                        logPushups(amount: 5)
+                                    }
+                                    QuickLogButton(amount: 10, isLocked: today.isComplete) {
+                                        logPushups(amount: 10)
+                                    }
+                                    QuickLogButton(amount: 20, isLocked: today.isComplete) {
+                                        logPushups(amount: 20)
                                     }
                                 }
-                            }
-                            
-                            // Progress Bar
-                            VStack(alignment: .leading, spacing: DSSpacing.s) {
-                                ProgressView(value: Double(today.completed), total: Double(today.target))
-                                    .progressViewStyle(.linear)
-                                    .tint(today.isComplete ? DSColor.success : DSColor.primary)
-                                    .scaleEffect(y: 2)
                                 
-                                HStack {
-                                    Text("Completed: \(today.completed)")
-                                        .font(DSFont.subheadline)
-                                        .foregroundStyle(DSColor.textSecondary)
-                                    Spacer()
-                                    Text("Remaining: \(today.remaining)")
-                                        .font(DSFont.subheadline)
-                                        .foregroundStyle(DSColor.textSecondary)
+                                Button(action: {
+                                    showingCustomSheet = true
+                                }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: today.isComplete ? "lock.fill" : "plus.circle")
+                                            .font(.system(size: 14))
+                                        Text("Custom Amount")
+                                            .font(.system(size: 15, weight: .medium))
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        today.isComplete ? 
+                                            DSColor.surface.opacity(0.3) : 
+                                            DSColor.surface.opacity(0.5)
+                                    )
+                                    .foregroundStyle(
+                                        today.isComplete ? 
+                                            DSColor.textSecondary.opacity(0.4) : 
+                                            DSColor.textSecondary.opacity(0.7)
+                                    )
+                                    .cornerRadius(DSRadius.button)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: DSRadius.button)
+                                            .strokeBorder(
+                                                today.isComplete ? 
+                                                    DSColor.textSecondary.opacity(0.15) : 
+                                                    Color.clear,
+                                                lineWidth: 1
+                                            )
+                                    )
                                 }
+                                .disabled(today.isComplete)
                             }
-                        }
-                        .padding(DSSpacing.m)
-                        .background(
-                            RoundedRectangle(cornerRadius: DSRadius.card)
-                                .fill(DSColor.surface)
-                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                        )
-                        .padding(.horizontal)
-                        
-                        // Motivation Line
-                        Text(motivation.line(forDay: today.dayNumber))
-                            .font(.callout)
-                            .italic()
-                            .foregroundStyle(DSColor.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                        
-                        // Quick Log Buttons
-                        VStack(spacing: 12) {
-                            Text("Log Push-ups")
-                                .font(DSFont.sectionHeader)
-                                .foregroundStyle(DSColor.textPrimary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal)
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 12)
                             
-                            HStack(spacing: 12) {
-                                QuickLogButton(amount: 5) {
-                                    logPushups(amount: 5)
-                                }
-                                .disabled(today.isComplete)
-                                QuickLogButton(amount: 10) {
-                                    logPushups(amount: 10)
-                                }
-                                .disabled(today.isComplete)
-                                QuickLogButton(amount: 20) {
-                                    logPushups(amount: 20)
-                                }
-                                .disabled(today.isComplete)
-                            }
-                            .padding(.horizontal)
-                            
-                            Button(action: {
-                                showingCustomSheet = true
-                            }) {
-                                HStack {
-                                    Image(systemName: "plus.circle")
-                                    Text("Custom Amount")
-                                }
-                                .font(DSFont.button)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(DSColor.primary.opacity(0.1))
-                                .foregroundStyle(DSColor.primary)
-                                .cornerRadius(DSRadius.button)
-                            }
-                            .disabled(today.isComplete)
-                            .padding(.horizontal)
-                        }
-                        
-                        // Undo Button
-                        if !today.logs.isEmpty {
-                            Button(action: undoLastLog) {
-                                HStack {
+                            // Undo button (always present; disabled when there is nothing to undo)
+                            let canUndo = !today.logs.isEmpty
+
+                            Button {
+                                guard canUndo else { return }
+                                undoLastLog()
+                            } label: {
+                                HStack(spacing: 6) {
                                     Image(systemName: "arrow.uturn.backward")
+                                        .font(.system(size: 11))
                                     Text("Undo Last Log")
+                                        .font(.system(size: 13, weight: .medium))
                                 }
-                                .font(DSFont.subheadline)
-                                .foregroundStyle(DSColor.destructive)
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule()
+                                        .fill(DSColor.surface.opacity(0.3))
+                                )
+                                .overlay(
+                                    Capsule()
+                                        .strokeBorder(DSColor.textSecondary.opacity(0.25), lineWidth: 1)
+                                )
                             }
-                            .padding(.top, DSSpacing.s)
+                            .disabled(!canUndo)
+                            .opacity(canUndo ? 1.0 : 0.35)
+                            .padding(.bottom, adaptiveBottomPadding(for: geometry) + 8)
+                            
+                        } else {
+                            ProgressView()
+                                .tint(DSColor.accent)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                         
-                        // Completion message
-                        if today.isComplete {
-                            Text("Done for today ✅")
+                        if let errorMessage = errorMessage {
+                            Text(errorMessage)
                                 .font(DSFont.caption)
-                                .foregroundStyle(DSColor.success)
-                                .padding(.top, 4)
+                                .foregroundStyle(DSColor.destructive)
+                                .padding()
                         }
-                        
-                    } else {
-                        // Loading State
-                        ProgressView()
-                            .padding()
                     }
-                    
-                    // Error Message
-                    if let errorMessage = errorMessage {
-                        Text(errorMessage)
-                            .font(DSFont.caption)
-                            .foregroundStyle(DSColor.destructive)
-                            .padding()
-                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .padding(.bottom, 32)
             }
-            .navigationTitle("Push365")
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .task {
                 await loadData()
             }
@@ -202,6 +246,20 @@ struct HomeView: View {
         }
     }
     
+    // MARK: - Adaptive Spacing
+    
+    private func adaptiveTopPadding(for geometry: GeometryProxy) -> CGFloat {
+        geometry.size.height < 700 ? 8 : 16
+    }
+    
+    private func adaptiveBottomPadding(for geometry: GeometryProxy) -> CGFloat {
+        geometry.size.height < 700 ? 16 : 24
+    }
+    
+    private func adaptiveSpacing(for geometry: GeometryProxy, base: CGFloat) -> CGFloat {
+        geometry.size.height < 700 ? base * 0.7 : base
+    }
+    
     // MARK: - Data Loading
     
     private func loadData() async {
@@ -209,6 +267,12 @@ struct HomeView: View {
             settings = try store.getOrCreateSettings(modelContext: modelContext)
             today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
             errorMessage = nil
+            
+            // Reset completion tracking
+            wasComplete = today?.isComplete ?? false
+            
+            // Reset completion tracking
+            wasComplete = today?.isComplete ?? false
             
             // Request notification permission (non-blocking)
             _ = await notificationManager.requestPermission()
@@ -261,20 +325,43 @@ struct HomeView: View {
 
 struct QuickLogButton: View {
     let amount: Int
+    let isLocked: Bool
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                if isLocked {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 10))
+                }
                 Text("+\(amount)")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 20)
-            .background(DSColor.primary)
-            .foregroundStyle(.white)
-            .cornerRadius(DSRadius.button)
+            .padding(.vertical, 18)
+            .background(
+                isLocked ? 
+                    DSColor.surface.opacity(0.2) : 
+                    Color.clear
+            )
+            .foregroundStyle(
+                isLocked ? 
+                    DSColor.textSecondary.opacity(0.35) : 
+                    DSColor.accent.opacity(0.8)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DSRadius.button)
+                    .strokeBorder(
+                        isLocked ? 
+                            DSColor.textSecondary.opacity(0.15) : 
+                            DSColor.accent.opacity(0.25),
+                        lineWidth: 1.5
+                    )
+            )
         }
+        .buttonStyle(.plain)
+        .disabled(isLocked)
     }
 }
 
@@ -284,43 +371,131 @@ struct CustomAmountSheet: View {
     let onCancel: () -> Void
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Text("Enter the number of push-ups")
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button(action: onCancel) {
+                    Text("Cancel")
+                        .font(DSFont.button)
+                        .foregroundStyle(DSColor.textSecondary)
+                }
+                
+                Spacer()
+                
+                Text("Custom Amount")
                     .font(DSFont.button)
+                    .fontWeight(.semibold)
                     .foregroundStyle(DSColor.textPrimary)
-                    .padding(.top)
                 
-                TextField("Amount", text: $amountText)
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.system(size: 24))
-                    .multilineTextAlignment(.center)
-                    .padding()
+                Spacer()
                 
+                Text("Cancel")
+                    .font(DSFont.button)
+                    .foregroundStyle(.clear)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(DSColor.surface)
+            
+            Divider()
+                .background(DSColor.textSecondary.opacity(0.2))
+            
+            // Content
+            VStack(spacing: 24) {
+                Spacer()
+                    .frame(height: 16)
+                
+                // Number input
+                VStack(spacing: 12) {
+                    TextField("0", text: $amountText)
+                        .keyboardType(.numberPad)
+                        .font(.system(size: 56, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(DSColor.textPrimary)
+                        .frame(height: 80)
+                        .background(
+                            RoundedRectangle(cornerRadius: DSRadius.button)
+                                .fill(DSColor.surface)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DSRadius.button)
+                                .strokeBorder(DSColor.accent.opacity(0.4), lineWidth: 2)
+                        )
+                        .padding(.horizontal, 32)
+                    
+                    Text("push-ups")
+                        .font(DSFont.subheadline)
+                        .foregroundStyle(DSColor.textSecondary)
+                }
+                
+                // Quick step buttons
+                HStack(spacing: 12) {
+                    QuickStepButton(label: "+1") {
+                        let current = Int(amountText) ?? 0
+                        amountText = "\(current + 1)"
+                    }
+                    
+                    QuickStepButton(label: "+5") {
+                        let current = Int(amountText) ?? 0
+                        amountText = "\(current + 5)"
+                    }
+                    
+                    QuickStepButton(label: "+10") {
+                        let current = Int(amountText) ?? 0
+                        amountText = "\(current + 10)"
+                    }
+                }
+                .padding(.horizontal, 32)
+                
+                Spacer()
+                
+                // Save button
                 Button(action: onSave) {
                     Text("Save")
                         .font(DSFont.button)
+                        .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(DSColor.primary)
-                        .foregroundStyle(.white)
-                        .cornerRadius(DSRadius.button)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: DSRadius.button)
+                                .fill(DSColor.accent)
+                        )
+                        .foregroundStyle(DSColor.background)
                 }
-                .padding(.horizontal)
                 .disabled(Int(amountText) == nil || Int(amountText) ?? 0 < 1)
-                
-                Spacer()
+                .opacity((Int(amountText) ?? 0) >= 1 ? 1.0 : 0.4)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 32)
             }
-            .navigationTitle("Custom Amount")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onCancel)
-                }
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(DSColor.overlay)
         }
         .presentationDetents([.medium])
+        .presentationDragIndicator(.hidden)
+    }
+}
+
+struct QuickStepButton: View {
+    let label: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(DSFont.button)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: DSRadius.pill)
+                        .fill(DSColor.surface)
+                )
+                .foregroundStyle(DSColor.textSecondary)
+                .overlay(
+                    RoundedRectangle(cornerRadius: DSRadius.pill)
+                        .strokeBorder(DSColor.textSecondary.opacity(0.3), lineWidth: 1)
+                )
+        }
     }
 }
 
