@@ -76,6 +76,9 @@ final class UserSettings {
     var lastCompletedDateKey: Date?
     var lastStreakEvaluatedDateKey: Date?
     
+    // Flexible mode tracking
+    var lastCompletedTarget: Int
+    
     // MARK: - Computed Properties
     
     /// Morning notification time as Date (today at specified hour/minute)
@@ -140,7 +143,8 @@ final class UserSettings {
         currentStreak: Int = 0,
         longestStreak: Int = 0,
         lastCompletedDateKey: Date? = nil,
-        lastStreakEvaluatedDateKey: Date? = nil
+        lastStreakEvaluatedDateKey: Date? = nil,
+        lastCompletedTarget: Int = 0
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -156,5 +160,6 @@ final class UserSettings {
         self.longestStreak = longestStreak
         self.lastCompletedDateKey = lastCompletedDateKey
         self.lastStreakEvaluatedDateKey = lastStreakEvaluatedDateKey
+        self.lastCompletedTarget = lastCompletedTarget
     }
 }

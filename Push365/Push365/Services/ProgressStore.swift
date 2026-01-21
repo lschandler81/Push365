@@ -29,7 +29,7 @@ final class ProgressStore {
         let defaultStartDate = DayCalculator.startOfYear(for: Date())
         let newSettings = UserSettings(
             startDate: defaultStartDate,
-            modeRaw: "strict",
+            modeRaw: "flexible",
             notificationsEnabled: true,
             morningHour: 8,
             morningMinute: 0,
@@ -76,7 +76,7 @@ final class ProgressStore {
         
         // Create new record
         let dayNumber = DayCalculator.dayNumber(for: dateKey, startDate: settings.startDate)
-        let target = DayCalculator.strictTarget(for: dayNumber)
+        let target = DayCalculator.resolvedTarget(for: date, dayNumber: dayNumber, settings: settings)
         
         let newRecord = DayRecord(
             dateKey: dateKey,
@@ -130,10 +130,16 @@ final class ProgressStore {
         // Recompute completed
         recomputeCompleted(for: record)
         
-        // If day just became complete, record completion for streak
+        // If day just became complete, record completion for streak and flexible mode
         if !wasComplete && record.isComplete {
             var settings = try getOrCreateSettings(modelContext: modelContext)
             StreakCalculator.recordCompletion(for: date, settings: &settings, calendar: .current)
+            
+            // Track completion for flexible mode
+            let dateKey = DayCalculator.dateKey(for: date)
+            settings.lastCompletedTarget = record.target
+            settings.lastCompletedDateKey = dateKey
+            print("[Completion] Completed target \(record.target) on \(dateKey)")
         }
         
         try modelContext.save()
