@@ -119,13 +119,14 @@ struct HomeView: View {
                             if today.isComplete {
                                 HStack(spacing: 6) {
                                     Text("Streak: \(settings.currentStreak)")
-                                        .font(.system(size: 15, weight: .semibold))
+                                        .font(.system(size: 17, weight: .semibold))
                                     Text("•")
-                                        .font(.system(size: 15))
+                                        .font(.system(size: 17))
                                     Text("Best: \(settings.longestStreak)")
-                                        .font(.system(size: 15, weight: .semibold))
+                                        .font(.system(size: 17, weight: .semibold))
                                 }
-                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .tracking(0.4)
+                                .foregroundStyle(DSColor.textPrimary.opacity(0.8))
                                 
                                 Spacer()
                                     .frame(height: adaptiveSpacing(for: geometry, base: 16))

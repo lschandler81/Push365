@@ -26,13 +26,17 @@ struct CircularProgressRing: View {
     private let electricBlue = Color(red: 0x4D/255, green: 0xA3/255, blue: 0xFF/255)       // #4DA3FF
     private let electricBlueBright = Color(red: 0xA6/255, green: 0xD6/255, blue: 0xFF/255) // lighter blue
     
+    // Success green palette
+    private let successGreen = Color(red: 0x4F/255, green: 0xAE/255, blue: 0x8A/255)       // #4FAE8A
+    private let successGreenBright = Color(red: 0xA8/255, green: 0xE6/255, blue: 0xCF/255) // #A8E6CF
+    
     // Computed colors based on completion state
-    private var primaryColor: Color {
-        isComplete ? DSColor.success : electricBlue
+    private var baseColor: Color {
+        isComplete ? successGreen : electricBlue
     }
     
     private var brightColor: Color {
-        isComplete ? DSColor.success.opacity(0.7) : electricBlueBright
+        isComplete ? successGreenBright : electricBlueBright
     }
 
     var body: some View {
@@ -49,7 +53,7 @@ struct CircularProgressRing: View {
                             AngularGradient(
                                 gradient: Gradient(colors: [
                                     brightColor.opacity(0.30),
-                                    primaryColor.opacity(0.18)
+                                    baseColor.opacity(0.18)
                                 ]),
                                 center: .center
                             ),
@@ -62,7 +66,7 @@ struct CircularProgressRing: View {
                             AngularGradient(
                                 gradient: Gradient(colors: [
                                     brightColor.opacity(p > 0 ? 0.30 : 0),
-                                    primaryColor.opacity(p > 0 ? 0.18 : 0)
+                                    baseColor.opacity(p > 0 ? 0.18 : 0)
                                 ]),
                                 center: .center
                             ),
@@ -87,7 +91,7 @@ struct CircularProgressRing: View {
                 .frame(width: ringSize, height: ringSize)
 
             Circle()
-                .stroke(primaryColor.opacity(0.14), lineWidth: ringWidth * 0.75)
+                .stroke(baseColor.opacity(0.14), lineWidth: ringWidth * 0.75)
                 .frame(width: ringSize, height: ringSize)
 
             // Layer 2b: Full-ring sheen (subtle transparent gradient around whole ring)
@@ -96,9 +100,9 @@ struct CircularProgressRing: View {
                     AngularGradient(
                         gradient: Gradient(stops: [
                             .init(color: brightColor.opacity(0.22), location: 0.00),
-                            .init(color: primaryColor.opacity(0.08), location: 0.22),
+                            .init(color: baseColor.opacity(0.08), location: 0.22),
                             .init(color: brightColor.opacity(0.18), location: 0.48),
-                            .init(color: primaryColor.opacity(0.06), location: 0.78),
+                            .init(color: baseColor.opacity(0.06), location: 0.78),
                             .init(color: brightColor.opacity(0.22), location: 1.00)
                         ]),
                         center: .center
@@ -117,9 +121,9 @@ struct CircularProgressRing: View {
                         .stroke(
                             AngularGradient(
                                 gradient: Gradient(stops: [
-                                    .init(color: primaryColor, location: 0.00),
+                                    .init(color: baseColor, location: 0.00),
                                     .init(color: brightColor, location: 0.30),
-                                    .init(color: primaryColor, location: 1.00)
+                                    .init(color: baseColor, location: 1.00)
                                 ]),
                                 center: .center
                             ),
@@ -131,9 +135,9 @@ struct CircularProgressRing: View {
                         .stroke(
                             AngularGradient(
                                 gradient: Gradient(stops: [
-                                    .init(color: primaryColor, location: 0.00),
+                                    .init(color: baseColor, location: 0.00),
                                     .init(color: brightColor, location: 0.30),
-                                    .init(color: primaryColor, location: 1.00)
+                                    .init(color: baseColor, location: 1.00)
                                 ]),
                                 center: .center
                             ),
