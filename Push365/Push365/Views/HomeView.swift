@@ -145,86 +145,6 @@ struct HomeView: View {
                             
                             Spacer()
                             
-                            // Quick Log Buttons (always visible)
-                            VStack(spacing: 12) {
-                                HStack(spacing: 12) {
-                                    QuickLogButton(amount: 5, isLocked: today.isComplete) {
-                                        logPushups(amount: 5)
-                                    }
-                                    QuickLogButton(amount: 10, isLocked: today.isComplete) {
-                                        logPushups(amount: 10)
-                                    }
-                                    QuickLogButton(amount: 20, isLocked: today.isComplete) {
-                                        logPushups(amount: 20)
-                                    }
-                                }
-                                
-                                Button(action: {
-                                    showingCustomSheet = true
-                                }) {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: today.isComplete ? "lock.fill" : "plus.circle")
-                                            .font(.system(size: 14))
-                                        Text("Custom Amount")
-                                            .font(.system(size: 15, weight: .medium))
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .background(
-                                        today.isComplete ? 
-                                            DSColor.surface.opacity(0.3) : 
-                                            DSColor.surface.opacity(0.5)
-                                    )
-                                    .foregroundStyle(
-                                        today.isComplete ? 
-                                            DSColor.textSecondary.opacity(0.4) : 
-                                            DSColor.textSecondary.opacity(0.8)
-                                    )
-                                    .cornerRadius(DSRadius.button)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: DSRadius.button)
-                                            .strokeBorder(
-                                                today.isComplete ? 
-                                                    DSColor.textSecondary.opacity(0.15) : 
-                                                    Color.clear,
-                                                lineWidth: 1
-                                            )
-                                    )
-                                }
-                                .disabled(today.isComplete)
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 12)
-                            
-                            // Undo button (always present; disabled when there is nothing to undo)
-                            let canUndo = !today.logs.isEmpty
-
-                            Button {
-                                guard canUndo else { return }
-                                undoLastLog()
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "arrow.uturn.backward")
-                                        .font(.system(size: 11))
-                                    Text("Undo Last Log")
-                                        .font(.system(size: 13, weight: .medium))
-                                }
-                                .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
-                                .background(
-                                    Capsule()
-                                        .fill(DSColor.surface.opacity(0.3))
-                                )
-                                .overlay(
-                                    Capsule()
-                                        .strokeBorder(DSColor.textSecondary.opacity(0.3), lineWidth: 1)
-                                )
-                            }
-                            .disabled(!canUndo)
-                            .opacity(canUndo ? 1.0 : 0.35)
-                            .padding(.bottom, adaptiveBottomPadding(for: geometry) + 8)
-                            
                         } else {
                             ProgressView()
                                 .tint(DSColor.accent)
@@ -239,6 +159,94 @@ struct HomeView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if let today = today {
+                    // Bottom control stack (fixed above tab bar)
+                    VStack(spacing: 12) {
+                        // Quick Log Buttons
+                        HStack(spacing: 12) {
+                            QuickLogButton(amount: 5, isLocked: today.isComplete) {
+                                logPushups(amount: 5)
+                            }
+                            QuickLogButton(amount: 10, isLocked: today.isComplete) {
+                                logPushups(amount: 10)
+                            }
+                            QuickLogButton(amount: 20, isLocked: today.isComplete) {
+                                logPushups(amount: 20)
+                            }
+                        }
+                        
+                        // Custom Amount button
+                        Button(action: {
+                            showingCustomSheet = true
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: today.isComplete ? "lock.fill" : "plus.circle")
+                                    .font(.system(size: 14))
+                                Text("Custom Amount")
+                                    .font(.system(size: 15, weight: .medium))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                today.isComplete ? 
+                                    DSColor.surface.opacity(0.3) : 
+                                    DSColor.surface.opacity(0.5)
+                            )
+                            .foregroundStyle(
+                                today.isComplete ? 
+                                    DSColor.textSecondary.opacity(0.4) : 
+                                    DSColor.textSecondary.opacity(0.8)
+                            )
+                            .cornerRadius(DSRadius.button)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: DSRadius.button)
+                                    .strokeBorder(
+                                        today.isComplete ? 
+                                            DSColor.textSecondary.opacity(0.15) : 
+                                            Color.clear,
+                                        lineWidth: 1
+                                    )
+                            )
+                        }
+                        .disabled(today.isComplete)
+                        
+                        // Undo button (always present; disabled when there is nothing to undo)
+                        let canUndo = !today.logs.isEmpty
+                        
+                        Button {
+                            guard canUndo else { return }
+                            undoLastLog()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.uturn.backward")
+                                    .font(.system(size: 11))
+                                Text("Undo Last Log")
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .fill(DSColor.surface.opacity(0.3))
+                            )
+                            .overlay(
+                                Capsule()
+                                    .strokeBorder(DSColor.textSecondary.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                        .disabled(!canUndo)
+                        .opacity(canUndo ? 1.0 : 0.35)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(
+                        Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
+                            .ignoresSafeArea()
+                    )
                 }
             }
             .toolbarColorScheme(.dark, for: .navigationBar)
