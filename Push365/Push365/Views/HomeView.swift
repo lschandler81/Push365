@@ -18,6 +18,7 @@ struct HomeView: View {
     @State private var showingCustomSheet = false
     @State private var customAmountText = ""
     @State private var wasComplete = false
+    @State private var showingModeInfo = false
     
     // Services
     private let store = ProgressStore()
@@ -71,7 +72,33 @@ struct HomeView: View {
                             .padding(.top, adaptiveTopPadding(for: geometry))
                             
                             Spacer()
-                                .frame(height: adaptiveSpacing(for: geometry, base: 32))
+                                .frame(height: adaptiveSpacing(for: geometry, base: 12))
+                            
+                            // Mode indicator pill
+                            Button(action: {
+                                showingModeInfo = true
+                            }) {
+                                HStack(spacing: 6) {
+                                    Text(settings.mode == .strict ? "Strict" : "Flexible")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                                    
+                                    Image(systemName: "info.circle")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.5))
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(
+                                    Capsule()
+                                        .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
+                                        .background(Capsule().fill(DSColor.surface.opacity(0.3)))
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Spacer()
+                                .frame(height: adaptiveSpacing(for: geometry, base: 20))
                             
                             // Circular Progress Ring - the hero
                             CircularProgressRing(
@@ -257,6 +284,11 @@ struct HomeView: View {
                         customAmountText = ""
                     }
                 )
+            }
+            .sheet(isPresented: $showingModeInfo) {
+                if let settings = settings {
+                    ModeInfoSheet(mode: settings.mode)
+                }
             }
         }
     }
@@ -511,6 +543,98 @@ struct QuickStepButton: View {
                         .strokeBorder(DSColor.textSecondary.opacity(0.3), lineWidth: 1)
                 )
         }
+    }
+}
+
+// MARK: - Mode Info Sheet
+
+struct ModeInfoSheet: View {
+    let mode: ProgressMode
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                // Base dark blue background
+                Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 24) {
+                    // Mode name
+                    VStack(spacing: 8) {
+                        Text("Progress Mode")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                            .textCase(.uppercase)
+                            .tracking(1)
+                        
+                        Text(mode == .strict ? "Strict" : "Flexible")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                    }
+                    .padding(.top, 32)
+                    
+                    // Explanation card
+                    VStack(alignment: .leading, spacing: 16) {
+                        if mode == .strict {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Today's target equals the day number.")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(DSColor.textPrimary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                
+                                Text("Example: Day 21 → target 21, even if you missed yesterday.")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        } else {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Your target only increases after you complete it.")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(DSColor.textPrimary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                
+                                Text("Example: If you miss a day, tomorrow stays at last completed + 1.")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(DSColor.surface)
+                    )
+                    .padding(.horizontal, 20)
+                    
+                    Spacer()
+                    
+                    // Done button
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Got It")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(DSColor.accent)
+                            )
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 32)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+        }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 }
 

@@ -87,7 +87,13 @@ final class NotificationManager {
     private func scheduleMorningNotification(for date: Date, settings: UserSettings, record: DayRecord) {
         let content = UNMutableNotificationContent()
         content.title = "Day \(record.dayNumber)"
-        content.body = "Your target today is \(record.target) push-ups."
+        
+        // Add context for flexible mode if target is held
+        var bodyText = "Your target today is \(record.target) push-ups."
+        if settings.mode == .flexible && record.target != record.dayNumber {
+            bodyText += " Flexible mode keeps your target steady until completed."
+        }
+        content.body = bodyText
         content.sound = .default
         
         let identifier = makeIdentifier(type: "morning", date: date)

@@ -44,9 +44,9 @@ enum ProgressMode: String, Codable, CaseIterable, Identifiable {
     var shortDescription: String {
         switch self {
         case .strict:
-            return "Target increases daily. Failure resets progress."
+            return "Target equals the day number."
         case .flexible:
-            return "Target increases when you're ready. No resets."
+            return "Target increases only after you complete it."
         }
     }
 }
@@ -79,6 +79,13 @@ final class UserSettings {
     
     // Flexible mode tracking
     var lastCompletedTarget: Int
+    
+    // Onboarding
+    var hasCompletedOnboarding: Bool
+    
+    // User profile (optional)
+    var displayName: String?
+    var dateOfBirth: Date?
     
     // MARK: - Computed Properties
     
@@ -146,7 +153,10 @@ final class UserSettings {
         longestStreak: Int = 0,
         lastCompletedDateKey: Date? = nil,
         lastStreakEvaluatedDateKey: Date? = nil,
-        lastCompletedTarget: Int = 0
+        lastCompletedTarget: Int = 0,
+        hasCompletedOnboarding: Bool = false,
+        displayName: String? = nil,
+        dateOfBirth: Date? = nil
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -164,5 +174,8 @@ final class UserSettings {
         self.lastCompletedDateKey = lastCompletedDateKey
         self.lastStreakEvaluatedDateKey = lastStreakEvaluatedDateKey
         self.lastCompletedTarget = lastCompletedTarget
+        self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.displayName = displayName
+        self.dateOfBirth = dateOfBirth
     }
 }
