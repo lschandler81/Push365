@@ -97,18 +97,6 @@ struct HomeView: View {
                             Spacer()
                                 .frame(height: adaptiveSpacing(for: geometry, base: 28))
                             
-                            // Streak indicator (small and calm)
-                            HStack(spacing: 6) {
-                                Text("Streak: \(settings.currentStreak)")
-                                    .font(.system(size: 13, weight: .medium))
-                                Text("•")
-                                    .font(.system(size: 13))
-                                Text("Best: \(settings.longestStreak)")
-                                    .font(.system(size: 13, weight: .medium))
-                            }
-                            .foregroundStyle(DSColor.textSecondary.opacity(0.6))
-                            .padding(.bottom, 8)
-                            
                             // Remaining stat (only if not complete)
                             if !today.isComplete {
                                 VStack(spacing: 4) {
@@ -127,17 +115,17 @@ struct HomeView: View {
                                     .frame(height: adaptiveSpacing(for: geometry, base: 16))
                             }
                             
-                            // Status pill (only show when complete)
+                            // Streak indicator (prominent when complete, hidden when not complete)
                             if today.isComplete {
-                                Text("Done for today ✅")
-                                    .font(DSFont.subheadline)
-                                    .foregroundStyle(DSColor.accent)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(
-                                        Capsule()
-                                            .fill(DSColor.accent.opacity(0.15))
-                                    )
+                                HStack(spacing: 6) {
+                                    Text("Streak: \(settings.currentStreak)")
+                                        .font(.system(size: 15, weight: .semibold))
+                                    Text("•")
+                                        .font(.system(size: 15))
+                                    Text("Best: \(settings.longestStreak)")
+                                        .font(.system(size: 15, weight: .semibold))
+                                }
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
                                 
                                 Spacer()
                                     .frame(height: adaptiveSpacing(for: geometry, base: 16))
