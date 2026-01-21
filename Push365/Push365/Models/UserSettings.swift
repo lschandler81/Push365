@@ -58,6 +58,7 @@ final class UserSettings {
     
     // Core settings
     var startDate: Date
+    var programStartDate: Date
     var modeRaw: String
     
     // Notifications
@@ -133,6 +134,7 @@ final class UserSettings {
         id: UUID = UUID(),
         createdAt: Date = Date(),
         startDate: Date,
+        programStartDate: Date? = nil,
         modeRaw: String = "flexible",
         notificationsEnabled: Bool = true,
         morningHour: Int = 8,
@@ -149,6 +151,7 @@ final class UserSettings {
         self.id = id
         self.createdAt = createdAt
         self.startDate = startDate
+        self.programStartDate = programStartDate ?? DayCalculator.startOfYear(for: startDate)
         self.modeRaw = modeRaw
         self.notificationsEnabled = notificationsEnabled
         self.morningHour = morningHour

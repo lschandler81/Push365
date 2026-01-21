@@ -14,9 +14,9 @@ enum DayCalculator {
         return calendar.startOfDay(for: date)
     }
     
-    /// Computes the day number (1-indexed) since startDate
+    /// Computes the day number (1-indexed) since programStartDate
     /// - Returns: Number of days elapsed + 1, clamped to minimum of 1
-    /// - Example: If startDate is Jan 1 and date is Jan 1, returns 1. Jan 2 returns 2, etc.
+    /// - Example: If programStartDate is Jan 1 and date is Jan 1, returns 1. Jan 2 returns 2, etc.
     static func dayNumber(for date: Date, startDate: Date, calendar: Calendar = .current) -> Int {
         let normalizedDate = dateKey(for: date, calendar: calendar)
         let normalizedStart = dateKey(for: startDate, calendar: calendar)
@@ -25,7 +25,7 @@ enum DayCalculator {
         let daysSince = components.day ?? 0
         
         // Day number is 1-indexed (day 0 = day 1, day 1 = day 2, etc.)
-        // Clamp to minimum of 1 if date is before startDate
+        // Clamp to minimum of 1 if date is before programStartDate
         return max(1, daysSince + 1)
     }
     

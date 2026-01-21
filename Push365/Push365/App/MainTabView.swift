@@ -15,6 +15,11 @@ struct MainTabView: View {
                     Label("Home", systemImage: "house.fill")
                 }
             
+            HistoryView()
+                .tabItem {
+                    Label("History", systemImage: "calendar")
+                }
+            
             ProgressScreen()
                 .tabItem {
                     Label("Progress", systemImage: "chart.line.uptrend.xyaxis")

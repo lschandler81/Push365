@@ -75,7 +75,7 @@ final class ProgressStore {
         }
         
         // Create new record
-        let dayNumber = DayCalculator.dayNumber(for: dateKey, startDate: settings.startDate)
+        let dayNumber = DayCalculator.dayNumber(for: dateKey, startDate: settings.programStartDate)
         let target = DayCalculator.resolvedTarget(for: date, dayNumber: dayNumber, settings: settings)
         
         let newRecord = DayRecord(
