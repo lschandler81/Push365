@@ -25,6 +25,15 @@ struct CircularProgressRing: View {
     // Electric blue palette
     private let electricBlue = Color(red: 0x4D/255, green: 0xA3/255, blue: 0xFF/255)       // #4DA3FF
     private let electricBlueBright = Color(red: 0xA6/255, green: 0xD6/255, blue: 0xFF/255) // lighter blue
+    
+    // Computed colors based on completion state
+    private var primaryColor: Color {
+        isComplete ? DSColor.success : electricBlue
+    }
+    
+    private var brightColor: Color {
+        isComplete ? DSColor.success.opacity(0.7) : electricBlueBright
+    }
 
     var body: some View {
         let p = min(max(animatedProgress, 0), 1)
@@ -39,8 +48,8 @@ struct CircularProgressRing: View {
                         .stroke(
                             AngularGradient(
                                 gradient: Gradient(colors: [
-                                    electricBlueBright.opacity(0.30),
-                                    electricBlue.opacity(0.18)
+                                    brightColor.opacity(0.30),
+                                    primaryColor.opacity(0.18)
                                 ]),
                                 center: .center
                             ),
@@ -52,8 +61,8 @@ struct CircularProgressRing: View {
                         .stroke(
                             AngularGradient(
                                 gradient: Gradient(colors: [
-                                    electricBlueBright.opacity(p > 0 ? 0.30 : 0),
-                                    electricBlue.opacity(p > 0 ? 0.18 : 0)
+                                    brightColor.opacity(p > 0 ? 0.30 : 0),
+                                    primaryColor.opacity(p > 0 ? 0.18 : 0)
                                 ]),
                                 center: .center
                             ),
@@ -67,7 +76,7 @@ struct CircularProgressRing: View {
 
             // Ambient full-ring glow (very subtle, always on)
             Circle()
-                .stroke(electricBlueBright.opacity(0.10), lineWidth: ringWidth + 12)
+                .stroke(brightColor.opacity(0.10), lineWidth: ringWidth + 12)
                 .frame(width: ringSize, height: ringSize)
                 .rotationEffect(.degrees(-90))
                 .blur(radius: 18)
@@ -78,7 +87,7 @@ struct CircularProgressRing: View {
                 .frame(width: ringSize, height: ringSize)
 
             Circle()
-                .stroke(electricBlue.opacity(0.14), lineWidth: ringWidth * 0.75)
+                .stroke(primaryColor.opacity(0.14), lineWidth: ringWidth * 0.75)
                 .frame(width: ringSize, height: ringSize)
 
             // Layer 2b: Full-ring sheen (subtle transparent gradient around whole ring)
@@ -86,11 +95,11 @@ struct CircularProgressRing: View {
                 .stroke(
                     AngularGradient(
                         gradient: Gradient(stops: [
-                            .init(color: electricBlueBright.opacity(0.22), location: 0.00),
-                            .init(color: electricBlue.opacity(0.08), location: 0.22),
-                            .init(color: electricBlueBright.opacity(0.18), location: 0.48),
-                            .init(color: electricBlue.opacity(0.06), location: 0.78),
-                            .init(color: electricBlueBright.opacity(0.22), location: 1.00)
+                            .init(color: brightColor.opacity(0.22), location: 0.00),
+                            .init(color: primaryColor.opacity(0.08), location: 0.22),
+                            .init(color: brightColor.opacity(0.18), location: 0.48),
+                            .init(color: primaryColor.opacity(0.06), location: 0.78),
+                            .init(color: brightColor.opacity(0.22), location: 1.00)
                         ]),
                         center: .center
                     ),
@@ -108,9 +117,9 @@ struct CircularProgressRing: View {
                         .stroke(
                             AngularGradient(
                                 gradient: Gradient(stops: [
-                                    .init(color: electricBlue, location: 0.00),
-                                    .init(color: electricBlueBright, location: 0.30),
-                                    .init(color: electricBlue, location: 1.00)
+                                    .init(color: primaryColor, location: 0.00),
+                                    .init(color: brightColor, location: 0.30),
+                                    .init(color: primaryColor, location: 1.00)
                                 ]),
                                 center: .center
                             ),
@@ -122,9 +131,9 @@ struct CircularProgressRing: View {
                         .stroke(
                             AngularGradient(
                                 gradient: Gradient(stops: [
-                                    .init(color: electricBlue, location: 0.00),
-                                    .init(color: electricBlueBright, location: 0.30),
-                                    .init(color: electricBlue, location: 1.00)
+                                    .init(color: primaryColor, location: 0.00),
+                                    .init(color: brightColor, location: 0.30),
+                                    .init(color: primaryColor, location: 1.00)
                                 ]),
                                 center: .center
                             ),
@@ -138,14 +147,24 @@ struct CircularProgressRing: View {
 
             // Center content
             VStack(spacing: 4) {
-                Text("\(target)")
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(Color.white.opacity(0.92))
+                if isComplete {
+                    Text("Done")
+                        .font(.system(size: 56, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.92))
+                    
+                    Text("for today")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.45))
+                } else {
+                    Text("\(target)")
+                        .font(.system(size: 56, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(Color.white.opacity(0.92))
 
-                Text("push-ups")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.45))
+                    Text("push-ups")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.45))
+                }
             }
         }
         // Prevent glow clipping
