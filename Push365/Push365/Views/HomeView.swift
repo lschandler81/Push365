@@ -100,7 +100,7 @@ struct HomeView: View {
                                         .foregroundStyle(DSColor.textPrimary.opacity(0.85))
                                     Text("Remaining")
                                         .font(.system(size: 11, weight: .medium))
-                                        .foregroundStyle(DSColor.textSecondary.opacity(0.5))
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.6))
                                         .textCase(.uppercase)
                                         .tracking(0.8)
                                 }
@@ -160,7 +160,7 @@ struct HomeView: View {
                                     .foregroundStyle(
                                         today.isComplete ? 
                                             DSColor.textSecondary.opacity(0.4) : 
-                                            DSColor.textSecondary.opacity(0.7)
+                                            DSColor.textSecondary.opacity(0.8)
                                     )
                                     .cornerRadius(DSRadius.button)
                                     .overlay(
@@ -191,7 +191,7 @@ struct HomeView: View {
                                     Text("Undo Last Log")
                                         .font(.system(size: 13, weight: .medium))
                                 }
-                                .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.7))
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
                                 .background(
@@ -200,7 +200,7 @@ struct HomeView: View {
                                 )
                                 .overlay(
                                     Capsule()
-                                        .strokeBorder(DSColor.textSecondary.opacity(0.25), lineWidth: 1)
+                                        .strokeBorder(DSColor.textSecondary.opacity(0.3), lineWidth: 1)
                                 )
                             }
                             .disabled(!canUndo)
@@ -355,7 +355,7 @@ struct QuickLogButton: View {
                     .strokeBorder(
                         isLocked ? 
                             DSColor.textSecondary.opacity(0.15) : 
-                            DSColor.accent.opacity(0.25),
+                            DSColor.accent.opacity(0.35),
                         lineWidth: 1.5
                     )
             )
