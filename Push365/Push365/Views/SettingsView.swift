@@ -54,16 +54,25 @@ struct SettingsView: View {
                                             .foregroundStyle(Color.orange.opacity(0.9))
                                             .frame(width: 28)
                                         
-                                        Text("Morning:")
+                                        Text("Morning")
                                             .font(DSFont.subheadline)
                                             .foregroundStyle(DSColor.textSecondary)
                                         
                                         Spacer()
                                         
-                                        Text(formatTime(hour: userSettings.morningHour, minute: userSettings.morningMinute))
-                                            .font(DSFont.button)
-                                            .foregroundStyle(DSColor.textPrimary)
-                                            .monospacedDigit()
+                                        DatePicker(
+                                            "",
+                                            selection: Binding(
+                                                get: { userSettings.morningTime },
+                                                set: { newTime in
+                                                    userSettings.morningTime = newTime
+                                                    handleTimeChange(settings: userSettings)
+                                                }
+                                            ),
+                                            displayedComponents: .hourAndMinute
+                                        )
+                                        .labelsHidden()
+                                        .tint(DSColor.accent)
                                     }
                                     
                                     HStack {
@@ -72,16 +81,25 @@ struct SettingsView: View {
                                             .foregroundStyle(Color.blue.opacity(0.8))
                                             .frame(width: 28)
                                         
-                                        Text("Reminder:")
+                                        Text("Reminder")
                                             .font(DSFont.subheadline)
                                             .foregroundStyle(DSColor.textSecondary)
                                         
                                         Spacer()
                                         
-                                        Text(formatTime(hour: userSettings.reminderHour, minute: userSettings.reminderMinute))
-                                            .font(DSFont.button)
-                                            .foregroundStyle(DSColor.textPrimary)
-                                            .monospacedDigit()
+                                        DatePicker(
+                                            "",
+                                            selection: Binding(
+                                                get: { userSettings.reminderTime },
+                                                set: { newTime in
+                                                    userSettings.reminderTime = newTime
+                                                    handleTimeChange(settings: userSettings)
+                                                }
+                                            ),
+                                            displayedComponents: .hourAndMinute
+                                        )
+                                        .labelsHidden()
+                                        .tint(DSColor.accent)
                                     }
                                 }
                             }
@@ -193,6 +211,22 @@ struct SettingsView: View {
             }
         } else {
             notificationManager.cancelAllNotifications()
+        }
+    }
+    
+    private func handleTimeChange(settings: UserSettings) {
+        do {
+            try modelContext.save()
+            Task {
+                do {
+                    let today = try progressStore.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
+                    notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
+                } catch {
+                    print("Error rescheduling notifications: \(error)")
+                }
+            }
+        } catch {
+            print("Error saving settings: \(error)")
         }
     }
     

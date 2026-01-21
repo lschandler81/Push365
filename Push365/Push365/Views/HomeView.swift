@@ -85,6 +85,12 @@ struct HomeView: View {
                                     let impact = UIImpactFeedbackGenerator(style: .medium)
                                     impact.impactOccurred()
                                     wasComplete = true
+                                    
+                                    // Immediately cancel evening reminder when target is reached
+                                    notificationManager.cancelReminder(for: Date())
+                                    
+                                    // Fire completion confirmation
+                                    notificationManager.notifyCompletion(for: today)
                                 }
                             }
                             

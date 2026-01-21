@@ -52,6 +52,32 @@ final class UserSettings {
     
     // MARK: - Computed Properties
     
+    /// Morning notification time as Date (today at specified hour/minute)
+    var morningTime: Date {
+        get {
+            let components = DateComponents(hour: morningHour, minute: morningMinute)
+            return Calendar.current.date(from: components) ?? Date()
+        }
+        set {
+            let components = Calendar.current.dateComponents([.hour, .minute], from: newValue)
+            morningHour = components.hour ?? 8
+            morningMinute = components.minute ?? 0
+        }
+    }
+    
+    /// Reminder notification time as Date (today at specified hour/minute)
+    var reminderTime: Date {
+        get {
+            let components = DateComponents(hour: reminderHour, minute: reminderMinute)
+            return Calendar.current.date(from: components) ?? Date()
+        }
+        set {
+            let components = Calendar.current.dateComponents([.hour, .minute], from: newValue)
+            reminderHour = components.hour ?? 18
+            reminderMinute = components.minute ?? 0
+        }
+    }
+    
     /// Computed property for type-safe date format preference
     var dateFormatPreference: DateFormatPreference {
         get {
