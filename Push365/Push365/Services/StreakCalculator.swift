@@ -51,7 +51,26 @@ struct StreakCalculator {
         }
         
         // Check if we need to reset streak due to missed days
+        // Only evaluate gaps that occur on or after trackingStartDate
         if let lastCompleted = settings.lastCompletedDateKey {
+            // If trackingStartDate exists, only penalize misses after tracking began
+            if let trackingStart = settings.trackingStartDate {
+                let trackingStartKey = startOfDay(trackingStart, calendar: calendar)
+                
+                // If last completion was before tracking started, treat as no history
+                if lastCompleted < trackingStartKey {
+                    // Don't reset streak - pre-tracking days don't count as misses
+                    settings.lastStreakEvaluatedDateKey = todayKey
+                    return
+                }
+                
+                // If today is before tracking start, don't evaluate (shouldn't happen)
+                if todayKey < trackingStartKey {
+                    settings.lastStreakEvaluatedDateKey = todayKey
+                    return
+                }
+            }
+            
             let gap = daysBetween(lastCompleted, todayKey, calendar: calendar)
             // If gap >= 2, it means at least one full day passed without completion
             if gap >= 2 {

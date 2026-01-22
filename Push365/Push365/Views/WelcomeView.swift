@@ -191,7 +191,13 @@ struct WelcomeView: View {
                                     .colorScheme(.dark)
                                     .tint(DSColor.accent)
                                     
-                                    Text("We'll label today as Day \(Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: startDate), to: Calendar.current.startOfDay(for: Date())).day! + 1) from your start date.")
+                                    let calendar = Calendar.current
+                                    let startOfDayStart = calendar.startOfDay(for: startDate)
+                                    let startOfDayToday = calendar.startOfDay(for: Date())
+                                    let daysDiff = calendar.dateComponents([.day], from: startOfDayStart, to: startOfDayToday).day ?? 0
+                                    let dayNumber = max(daysDiff + 1, 1)
+                                    
+                                    Text("We'll label today as Day \(dayNumber) from your start date.")
                                         .font(.system(size: 13))
                                         .foregroundStyle(DSColor.textSecondary.opacity(0.6))
                                 }

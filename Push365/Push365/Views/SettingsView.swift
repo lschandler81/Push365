@@ -334,6 +334,9 @@ struct SettingsView: View {
     }
     
     private func performReset() {
+        // Cancel all scheduled notifications first
+        notificationManager.cancelAllNotifications()
+        
         // Delete all records
         for record in allRecords {
             modelContext.delete(record)

@@ -96,11 +96,23 @@ final class NotificationManager {
         content.body = bodyText
         content.sound = .default
         
+        let calendar = Calendar.current
         let identifier = makeIdentifier(type: "morning", date: date)
         
-        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        // Build the notification time for today
+        var dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
         dateComponents.hour = settings.morningHour
         dateComponents.minute = settings.morningMinute
+        
+        // Check if this time has already passed today
+        if let scheduledDate = calendar.date(from: dateComponents), scheduledDate <= Date() {
+            // Time has passed, schedule for tomorrow instead
+            if let tomorrow = calendar.date(byAdding: .day, value: 1, to: date) {
+                dateComponents = calendar.dateComponents([.year, .month, .day], from: tomorrow)
+                dateComponents.hour = settings.morningHour
+                dateComponents.minute = settings.morningMinute
+            }
+        }
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
@@ -118,11 +130,23 @@ final class NotificationManager {
         content.body = "You can finish before the day ends."
         content.sound = .default
         
+        let calendar = Calendar.current
         let identifier = makeIdentifier(type: "reminder", date: date)
         
-        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        // Build the notification time for today
+        var dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
         dateComponents.hour = settings.reminderHour
         dateComponents.minute = settings.reminderMinute
+        
+        // Check if this time has already passed today
+        if let scheduledDate = calendar.date(from: dateComponents), scheduledDate <= Date() {
+            // Time has passed, schedule for tomorrow instead
+            if let tomorrow = calendar.date(byAdding: .day, value: 1, to: date) {
+                dateComponents = calendar.dateComponents([.year, .month, .day], from: tomorrow)
+                dateComponents.hour = settings.reminderHour
+                dateComponents.minute = settings.reminderMinute
+            }
+        }
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
