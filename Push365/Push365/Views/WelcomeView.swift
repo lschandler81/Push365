@@ -15,22 +15,33 @@ struct WelcomeView: View {
     @State private var displayName: String = ""
     @State private var dateOfBirth: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @State private var selectedMode: ProgressMode = .flexible
-    @State private var showDatePicker: Bool = false
+    @State private var showBirthdayPicker: Bool = false
+    @State private var hasBirthday: Bool = false
+    @State private var tempDateOfBirth: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @State private var alreadyStarted: Bool = false
     @State private var startDate: Date = Date()
     @State private var enableBackfill: Bool = false
     @State private var showModeInfo: Bool = false
+    
+    @FocusState private var focusedField: FocusField?
     
     private let store = ProgressStore()
     private let notificationManager = NotificationManager()
     
     var onComplete: () -> Void
     
+    enum FocusField: Hashable {
+        case name
+    }
+    
     var body: some View {
         ZStack {
             // Base dark blue background
             Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
                 .ignoresSafeArea()
+                .onTapGesture {
+                    focusedField = nil
+                }
             
             // Ring-centered spotlight
             RadialGradient(
@@ -43,11 +54,15 @@ struct WelcomeView: View {
                 endRadius: 300
             )
             .ignoresSafeArea()
+            .onTapGesture {
+                focusedField = nil
+            }
             
-            ScrollView {
-                VStack(spacing: 32) {
-                    // Header
-                    VStack(spacing: 16) {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 32) {
+                        // Header
+                        VStack(spacing: 16) {
                         Text("Welcome to")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(DSColor.textSecondary.opacity(0.7))
@@ -256,45 +271,43 @@ struct WelcomeView: View {
                                         .fill(DSColor.background)
                                 )
                                 .autocorrectionDisabled()
+                                .focused($focusedField, equals: .name)
+                                .submitLabel(.done)
+                                .onSubmit {
+                                    focusedField = nil
+                                }
+                                .id("nameField")
                         }
                         
                         // Birthday field
-                        VStack(alignment: .leading, spacing: 8) {
-                            Button {
-                                showDatePicker.toggle()
-                            } label: {
-                                HStack {
-                                    Text("Birthday (optional)")
-                                        .font(.system(size: 15, weight: .medium))
-                                        .foregroundStyle(DSColor.textSecondary)
-                                    
-                                    Spacer()
-                                    
-                                    if showDatePicker {
-                                        Text(dateOfBirth, style: .date)
-                                            .font(.system(size: 15))
-                                            .foregroundStyle(DSColor.textPrimary)
-                                    }
-                                    
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 12))
-                                        .foregroundStyle(DSColor.textSecondary.opacity(0.5))
-                                        .rotationEffect(.degrees(showDatePicker ? 90 : 0))
-                                }
+                        Button {
+                            focusedField = nil
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                showBirthdayPicker = true
                             }
-                            
-                            if showDatePicker {
-                                DatePicker(
-                                    "",
-                                    selection: $dateOfBirth,
-                                    in: ...Date(),
-                                    displayedComponents: .date
-                                )
-                                .datePickerStyle(.wheel)
-                                .labelsHidden()
-                                .colorScheme(.dark)
+                        } label: {
+                            HStack {
+                                Text("Birthday (optional)")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(DSColor.textSecondary)
+                                
+                                Spacer()
+                                
+                                Text(hasBirthday ? formatDate(dateOfBirth) : "Not set")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(hasBirthday ? DSColor.textPrimary : DSColor.textSecondary.opacity(0.5))
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(DSColor.textSecondary.opacity(0.5))
                             }
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(DSColor.background)
+                            )
                         }
+                        .buttonStyle(.plain)
                     }
                     .padding(20)
                     .background(
@@ -305,6 +318,7 @@ struct WelcomeView: View {
                     
                     // Get Started button
                     Button {
+                        focusedField = nil
                         completeOnboarding()
                     } label: {
                         Text("Get Started")
@@ -319,12 +333,50 @@ struct WelcomeView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
+                    .id("getStartedButton")
+                    }
+                    .onChange(of: focusedField) { _, newValue in
+                        if let field = newValue {
+                            withAnimation {
+                                proxy.scrollTo("nameField", anchor: .center)
+                            }
+                        }
+                    }
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            focusedField = nil
+                        }
+                        .foregroundStyle(DSColor.accent)
+                    }
                 }
             }
-            .sheet(isPresented: $showModeInfo) {
-                ModeExplanationSheet()
-            }
         }
+        .sheet(isPresented: $showModeInfo) {
+            ModeExplanationSheet()
+        }
+        .sheet(isPresented: $showBirthdayPicker) {
+            BirthdayPickerSheet(
+                dateOfBirth: $tempDateOfBirth,
+                onSave: {
+                    dateOfBirth = tempDateOfBirth
+                    hasBirthday = true
+                    showBirthdayPicker = false
+                },
+                onCancel: {
+                    showBirthdayPicker = false
+                }
+            )
+        }
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: date)
     }
     
     private func completeOnboarding() {
@@ -343,7 +395,7 @@ struct WelcomeView: View {
                 
                 // Save onboarding data
                 userSettings.displayName = displayName.isEmpty ? nil : displayName
-                userSettings.dateOfBirth = showDatePicker ? dateOfBirth : nil
+                userSettings.dateOfBirth = hasBirthday ? dateOfBirth : nil
                 userSettings.mode = selectedMode
                 userSettings.hasCompletedOnboarding = true
                 
@@ -473,6 +525,93 @@ struct ModeExplanationSheet: View {
             .toolbarColorScheme(.dark, for: .navigationBar)
         }
         .presentationDetents([.medium])
+    }
+}
+
+// MARK: - Birthday Picker Sheet
+
+struct BirthdayPickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var dateOfBirth: Date
+    let onSave: () -> Void
+    let onCancel: () -> Void
+    
+    private let minDate: Date = {
+        let calendar = Calendar.current
+        return calendar.date(from: DateComponents(year: 1900, month: 1, day: 1)) ?? Date()
+    }()
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                DSColor.background.ignoresSafeArea()
+                
+                VStack(spacing: 24) {
+                    VStack(spacing: 8) {
+                        Text("Birthday")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                        
+                        Text("Optional – helps personalize your experience")
+                            .font(.system(size: 15))
+                            .foregroundStyle(DSColor.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.top, 32)
+                    
+                    DatePicker(
+                        "",
+                        selection: $dateOfBirth,
+                        in: minDate...Date(),
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.graphical)
+                    .labelsHidden()
+                    .colorScheme(.dark)
+                    .tint(DSColor.accent)
+                    .padding(.horizontal, 20)
+                    
+                    Spacer()
+                    
+                    // Action buttons
+                    VStack(spacing: 12) {
+                        Button {
+                            onSave()
+                        } label: {
+                            Text("Done")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(DSColor.textPrimary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(DSColor.accent)
+                                )
+                        }
+                        
+                        Button {
+                            onCancel()
+                        } label: {
+                            Text("Cancel")
+                                .font(.system(size: 17, weight: .medium))
+                                .foregroundStyle(DSColor.textSecondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(DSColor.surface)
+                                )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 32)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 }
 
