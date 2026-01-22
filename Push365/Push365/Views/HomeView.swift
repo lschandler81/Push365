@@ -337,10 +337,21 @@ struct HomeView: View {
     
     private func logPushups(amount: Int) {
         do {
+            // Light haptic for logging
+            HapticManager.lightImpact()
+            
+            let wasCompleteBefore = today?.isComplete ?? false
+            
             try store.addLog(amount: amount, date: Date(), modelContext: modelContext)
             // Refresh today's record
             today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
             errorMessage = nil
+            
+            // Success haptic if day just became complete
+            let isCompleteNow = today?.isComplete ?? false
+            if !wasCompleteBefore && isCompleteNow {
+                HapticManager.success()
+            }
             
             // Reschedule notifications with updated remaining count
             if let settings = settings, let today = today {
@@ -353,6 +364,9 @@ struct HomeView: View {
     
     private func undoLastLog() {
         do {
+            // Medium haptic for undo
+            HapticManager.mediumImpact()
+            
             try store.undoLastLog(date: Date(), modelContext: modelContext)
             // Refresh today's record
             today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)

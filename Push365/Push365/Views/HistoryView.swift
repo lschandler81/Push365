@@ -8,6 +8,11 @@
 import SwiftUI
 import SwiftData
 
+struct MonthIdentifier: Equatable, Hashable {
+    let year: Int
+    let month: Int
+}
+
 struct CalendarMonth: Identifiable {
     let id = UUID()
     let year: Int
@@ -31,6 +36,7 @@ struct CalendarDay: Identifiable {
     let isComplete: Bool
     let isToday: Bool
     let isFuture: Bool
+    let isBeforeStart: Bool
     let isCurrentMonth: Bool
     let completed: Int
     let target: Int
@@ -43,6 +49,7 @@ struct HistoryView: View {
     
     @State private var months: [CalendarMonth] = []
     @State private var selectedRange: HistoryRange = .thirtyDays
+    @State private var selectedMonth: MonthIdentifier? = nil
     
     private let store = ProgressStore()
     
@@ -95,14 +102,28 @@ struct HistoryView: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
-                        ScrollView {
-                            LazyVStack(spacing: 24) {
-                                ForEach(months) { month in
-                                    MonthCalendarView(month: month, settings: settings.first)
-                                }
+                        VStack(spacing: 12) {
+                            // Monthly summary (only for 30 Days mode)
+                            if selectedRange == .thirtyDays, let month = months.first {
+                                monthlySummarySection(month: month)
+                                    .padding(.horizontal, 20)
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 16)
+                            
+                            // Month navigation (only for 30 Days mode)
+                            if selectedRange == .thirtyDays {
+                                monthNavigationControls()
+                                    .padding(.horizontal, 20)
+                            }
+                            
+                            ScrollView {
+                                LazyVStack(spacing: 24) {
+                                    ForEach(months) { month in
+                                        MonthCalendarView(month: month, settings: settings.first)
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 16)
+                            }
                         }
                     }
                 }
@@ -112,12 +133,193 @@ struct HistoryView: View {
             .task {
                 await loadHistory()
             }
-            .onChange(of: selectedRange) { _, _ in
+            .onChange(of: selectedRange) { _, newValue in
+                // Reset month selection when switching to All Time
+                if newValue == .allTime {
+                    selectedMonth = nil
+                }
+                Task {
+                    await loadHistory()
+                }
+            }
+            .onChange(of: selectedMonth) { _, _ in
                 Task {
                     await loadHistory()
                 }
             }
         }
+    }
+    
+    // MARK: - Month Navigation
+    
+    @ViewBuilder
+    private func monthNavigationControls() -> some View {
+        guard let userSettings = settings.first else { return AnyView(EmptyView()) }
+        
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let todayComponents = calendar.dateComponents([.year, .month], from: today)
+        let currentMonth = MonthIdentifier(year: todayComponents.year!, month: todayComponents.month!)
+        
+        let startComponents = calendar.dateComponents([.year, .month], from: userSettings.programStartDate)
+        let startMonth = MonthIdentifier(year: startComponents.year!, month: startComponents.month!)
+        
+        let displayedMonth = selectedMonth ?? currentMonth
+        
+        // Check if we can go back
+        let canGoBack: Bool = {
+            let displayedDate = calendar.date(from: DateComponents(year: displayedMonth.year, month: displayedMonth.month))!
+            let startDate = calendar.date(from: DateComponents(year: startMonth.year, month: startMonth.month))!
+            return displayedDate > startDate
+        }()
+        
+        // Check if we can go forward (not past current month)
+        let canGoForward: Bool = {
+            let displayedDate = calendar.date(from: DateComponents(year: displayedMonth.year, month: displayedMonth.month))!
+            let currentDate = calendar.date(from: DateComponents(year: currentMonth.year, month: currentMonth.month))!
+            return displayedDate < currentDate
+        }()
+        
+        return AnyView(
+            HStack(spacing: 16) {
+                // Previous month button
+                Button(action: {
+                    navigateMonth(offset: -1)
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(canGoBack ? DSColor.accent : DSColor.textSecondary.opacity(0.3))
+                        .frame(width: 44, height: 44)
+                        .background(
+                            Circle()
+                                .fill(DSColor.surface.opacity(0.5))
+                        )
+                }
+                .disabled(!canGoBack)
+                
+                // Current month label
+                Text(monthDisplayName(year: displayedMonth.year, month: displayedMonth.month))
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(DSColor.textPrimary)
+                    .frame(maxWidth: .infinity)
+                
+                // Next month button
+                Button(action: {
+                    navigateMonth(offset: 1)
+                }) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(canGoForward ? DSColor.accent : DSColor.textSecondary.opacity(0.3))
+                        .frame(width: 44, height: 44)
+                        .background(
+                            Circle()
+                                .fill(DSColor.surface.opacity(0.5))
+                        )
+                }
+                .disabled(!canGoForward)
+            }
+            .padding(.vertical, 8)
+        )
+    }
+    
+    private func navigateMonth(offset: Int) {
+        let calendar = Calendar.current
+        let currentMonth = selectedMonth ?? {
+            let today = calendar.startOfDay(for: Date())
+            let components = calendar.dateComponents([.year, .month], from: today)
+            return MonthIdentifier(year: components.year!, month: components.month!)
+        }()
+        
+        let currentDate = calendar.date(from: DateComponents(year: currentMonth.year, month: currentMonth.month))!
+        guard let newDate = calendar.date(byAdding: .month, value: offset, to: currentDate) else { return }
+        
+        let newComponents = calendar.dateComponents([.year, .month], from: newDate)
+        selectedMonth = MonthIdentifier(year: newComponents.year!, month: newComponents.month!)
+    }
+    
+    private func monthDisplayName(year: Int, month: Int) -> String {
+        let calendar = Calendar.current
+        guard let date = calendar.date(from: DateComponents(year: year, month: month)) else { return "" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: date)
+    }
+    
+    // MARK: - Monthly Summary
+    
+    @ViewBuilder
+    private func monthlySummarySection(month: CalendarMonth) -> some View {
+        let eligibleDays = month.days.filter { $0.isCurrentMonth && !$0.isFuture && !$0.isBeforeStart }
+        
+        if eligibleDays.isEmpty {
+            // Empty state
+            VStack(spacing: 8) {
+                Text("No data yet")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(DSColor.textPrimary)
+                Text("Complete a day to see your monthly stats.")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(DSColor.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(DSColor.surface.opacity(0.5))
+            )
+        } else {
+            let summary = calculateMonthlySummary(eligibleDays: eligibleDays)
+            
+            HStack(spacing: 20) {
+                // Completed days
+                VStack(spacing: 4) {
+                    Text("\(summary.completed)")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(DSColor.success)
+                    Text("Completed")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(DSColor.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                
+                // Missed days
+                VStack(spacing: 4) {
+                    Text("\(summary.missed)")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(DSColor.textSecondary)
+                    Text("Missed")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(DSColor.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                
+                // Completion rate
+                VStack(spacing: 4) {
+                    Text("\(summary.completionRate)%")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(DSColor.accent)
+                    Text("Success Rate")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(DSColor.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(DSColor.surface.opacity(0.5))
+            )
+        }
+    }
+    
+    private func calculateMonthlySummary(eligibleDays: [CalendarDay]) -> (completed: Int, missed: Int, completionRate: Int) {
+        let completed = eligibleDays.filter { $0.isComplete }.count
+        let total = eligibleDays.count
+        let missed = total - completed
+        
+        let completionRate: Int = total > 0 ? Int((Double(completed) / Double(total)) * 100) : 0
+        
+        return (completed: completed, missed: missed, completionRate: completionRate)
     }
     
     private func loadHistory() async {
@@ -137,9 +339,13 @@ struct HistoryView: View {
         
         switch selectedRange {
         case .thirtyDays:
-            // Show current month only
-            let components = calendar.dateComponents([.year, .month], from: today)
-            monthsToShow = [(year: components.year!, month: components.month!)]
+            // Show selected month (or current month if none selected)
+            if let selected = selectedMonth {
+                monthsToShow = [(year: selected.year, month: selected.month)]
+            } else {
+                let components = calendar.dateComponents([.year, .month], from: today)
+                monthsToShow = [(year: components.year!, month: components.month!)]
+            }
             
         case .allTime:
             // Show all months from program start to current month
@@ -208,6 +414,7 @@ struct HistoryView: View {
                 isComplete: false,
                 isToday: false,
                 isFuture: true,
+                isBeforeStart: false,
                 isCurrentMonth: false,
                 completed: 0,
                 target: 0
@@ -222,6 +429,8 @@ struct HistoryView: View {
             
             let isToday = calendar.isDate(dateKey, inSameDayAs: today)
             let isFuture = dateKey > today
+            let programStart = calendar.startOfDay(for: userSettings.programStartDate)
+            let isBeforeStart = dateKey < programStart
             
             // Calculate day number
             let dayNumber = DayCalculator.dayNumber(for: dateKey, startDate: userSettings.programStartDate)
@@ -235,6 +444,7 @@ struct HistoryView: View {
                     isComplete: record.isComplete,
                     isToday: isToday,
                     isFuture: isFuture,
+                    isBeforeStart: isBeforeStart,
                     isCurrentMonth: true,
                     completed: record.completed,
                     target: record.target
@@ -249,6 +459,7 @@ struct HistoryView: View {
                     isComplete: false,
                     isToday: isToday,
                     isFuture: isFuture,
+                    isBeforeStart: isBeforeStart,
                     isCurrentMonth: true,
                     completed: 0,
                     target: target
@@ -301,7 +512,7 @@ struct MonthCalendarView: View {
                         )) {
                             CalendarDayTile(day: day)
                         }
-                        .disabled(day.isFuture)
+                        .disabled(day.isFuture || day.isBeforeStart)
                         .buttonStyle(PlainButtonStyle())
                     } else {
                         // Empty cell for offset
@@ -326,8 +537,8 @@ struct CalendarDayTile: View {
         ZStack {
             // Background
             RoundedRectangle(cornerRadius: 8)
-                .fill(day.isFuture ? DSColor.background : DSColor.surface)
-                .opacity(day.isFuture ? 0.3 : 1.0)
+                .fill(day.isFuture || day.isBeforeStart ? DSColor.background : DSColor.surface)
+                .opacity(day.isFuture || day.isBeforeStart ? 0.3 : 1.0)
             
             // Today outline
             if day.isToday {
@@ -336,7 +547,7 @@ struct CalendarDayTile: View {
             }
             
             // Completion indicator
-            if day.isComplete {
+            if day.isComplete && !day.isBeforeStart {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(DSColor.success.opacity(0.15))
                 
@@ -345,20 +556,27 @@ struct CalendarDayTile: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(DSColor.success)
                     
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(DSColor.success.opacity(0.8))
+                    // Green filled dot
+                    Circle()
+                        .fill(DSColor.success)
+                        .frame(width: 6, height: 6)
                 }
+            } else if day.isBeforeStart {
+                // Before program start - very dim
+                Text("\(day.dayOfMonth)")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(DSColor.textSecondary.opacity(0.15))
             } else {
                 VStack(spacing: 2) {
                     Text("\(day.dayOfMonth)")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(day.isFuture ? DSColor.textSecondary.opacity(0.3) : DSColor.textPrimary)
                     
+                    // Past/today incomplete: grey hollow dot
                     if !day.isFuture && day.isCurrentMonth {
                         Circle()
                             .stroke(DSColor.textSecondary.opacity(0.3), lineWidth: 1.5)
-                            .frame(width: 10, height: 10)
+                            .frame(width: 6, height: 6)
                     }
                 }
             }

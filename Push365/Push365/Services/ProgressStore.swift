@@ -26,9 +26,10 @@ final class ProgressStore {
         }
         
         // Create default settings
-        let defaultStartDate = DayCalculator.startOfYear(for: Date())
+        let today = Calendar.current.startOfDay(for: Date())
         let newSettings = UserSettings(
-            startDate: defaultStartDate,
+            startDate: today,
+            programStartDate: today,
             modeRaw: "flexible",
             notificationsEnabled: true,
             morningHour: 8,

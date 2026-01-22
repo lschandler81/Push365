@@ -16,6 +16,8 @@ struct WelcomeView: View {
     @State private var dateOfBirth: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @State private var selectedMode: ProgressMode = .flexible
     @State private var showDatePicker: Bool = false
+    @State private var alreadyStarted: Bool = false
+    @State private var yesterdayTarget: String = ""
     
     private let store = ProgressStore()
     private let notificationManager = NotificationManager()
@@ -140,6 +142,49 @@ struct WelcomeView: View {
                     )
                     .padding(.horizontal, 20)
                     
+                    // Already Started section
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Already started?")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                            .textCase(.uppercase)
+                            .tracking(1)
+                        
+                        Picker("Status", selection: $alreadyStarted) {
+                            Text("Starting today").tag(false)
+                            Text("I've already started").tag(true)
+                        }
+                        .pickerStyle(.segmented)
+                        
+                        if alreadyStarted {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Yesterday's target")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(DSColor.textSecondary)
+                                
+                                TextField("e.g., 21", text: $yesterdayTarget)
+                                    .font(.system(size: 17))
+                                    .foregroundStyle(DSColor.textPrimary)
+                                    .keyboardType(.numberPad)
+                                    .padding(12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(DSColor.background)
+                                    )
+                                
+                                Text("Enter the push-ups you were meant to do yesterday.")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                            }
+                        }
+                    }
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(DSColor.surface)
+                    )
+                    .padding(.horizontal, 20)
+                    
                     // Progress Mode selection
                     VStack(alignment: .leading, spacing: 20) {
                         Text("Progress Mode")
@@ -219,6 +264,36 @@ struct WelcomeView: View {
             do {
                 // Get or create settings
                 var userSettings = try store.getOrCreateSettings(modelContext: modelContext)
+                
+                let calendar = Calendar.current
+                let today = calendar.startOfDay(for: Date())
+                let yesterday = calendar.date(byAdding: .day, value: -1, to: today) ?? today
+                let yesterdayKey = calendar.startOfDay(for: yesterday)
+                
+                // Handle "Already started" logic
+                if alreadyStarted, let targetValue = Int(yesterdayTarget), targetValue >= 1 {
+                    // Clamp to reasonable range
+                    let clampedTarget = min(targetValue, 365)
+                    
+                    // Calculate programStartDate so yesterday would be day N
+                    // If yesterday should be day N, then programStart = yesterday - (N - 1) days
+                    let daysBack = clampedTarget - 1
+                    if let calculatedStart = calendar.date(byAdding: .day, value: -daysBack, to: yesterdayKey) {
+                        userSettings.programStartDate = calculatedStart
+                    } else {
+                        userSettings.programStartDate = today
+                    }
+                    
+                    // Set completion tracking
+                    userSettings.lastCompletedTarget = clampedTarget
+                    userSettings.lastCompletedDateKey = yesterdayKey
+                    userSettings.currentStreak = 0 // Conservative: don't assume yesterday was completed
+                    // longestStreak remains unchanged
+                } else {
+                    // Starting today: Day 1
+                    userSettings.programStartDate = today
+                    // Don't modify streak/completion fields - let first completion handle it
+                }
                 
                 // Save onboarding data
                 userSettings.displayName = displayName.isEmpty ? nil : displayName

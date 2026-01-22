@@ -134,10 +134,16 @@ struct SettingsView: View {
                                 .pickerStyle(.segmented)
                                 .labelsHidden()
                                 
-                                Text(userSettings.mode.shortDescription)
-                                    .font(DSFont.caption)
-                                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                                    .fixedSize(horizontal: false, vertical: true)
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(userSettings.mode.shortDescription)
+                                        .font(DSFont.caption)
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    
+                                    Text("Changes apply from tomorrow.")
+                                        .font(DSFont.caption)
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.5))
+                                }
                             }
                         }
                         .padding(20)

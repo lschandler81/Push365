@@ -161,7 +161,7 @@ final class UserSettings {
         self.id = id
         self.createdAt = createdAt
         self.startDate = startDate
-        self.programStartDate = programStartDate ?? DayCalculator.startOfYear(for: startDate)
+        self.programStartDate = programStartDate ?? startDate
         self.modeRaw = modeRaw
         self.notificationsEnabled = notificationsEnabled
         self.morningHour = morningHour
