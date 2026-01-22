@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7EE9A6702F223FCE00561F0F /* Push365 Watch App Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 7EE9A6502F223FCA00561F0F /* Push365 Watch App Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		7EE9A5FC2F1FB11D00561F0F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,12 +25,50 @@
 			remoteGlobalIDString = 7EE9A5ED2F1FB11A00561F0F;
 			remoteInfo = Push365;
 		};
+		7EE9A65D2F223FCE00561F0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7EE9A5E62F1FB11A00561F0F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7EE9A64F2F223FCA00561F0F;
+			remoteInfo = "Push365 Watch App Watch App";
+		};
+		7EE9A6672F223FCE00561F0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7EE9A5E62F1FB11A00561F0F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7EE9A64F2F223FCA00561F0F;
+			remoteInfo = "Push365 Watch App Watch App";
+		};
+		7EE9A66E2F223FCE00561F0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7EE9A5E62F1FB11A00561F0F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7EE9A64F2F223FCA00561F0F;
+			remoteInfo = "Push365 Watch App Watch App";
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7EE9A6742F223FCE00561F0F /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				7EE9A6702F223FCE00561F0F /* Push365 Watch App Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		7EE9A5EE2F1FB11A00561F0F /* Push365.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Push365.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EE9A5FB2F1FB11D00561F0F /* Push365Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Push365Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EE9A6052F1FB11D00561F0F /* Push365UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Push365UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7EE9A6502F223FCA00561F0F /* Push365 Watch App Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Push365 Watch App Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7EE9A65C2F223FCE00561F0F /* Push365 Watch App Watch AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Push365 Watch App Watch AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7EE9A6662F223FCE00561F0F /* Push365 Watch App Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Push365 Watch App Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -43,6 +85,21 @@
 		7EE9A6082F1FB11D00561F0F /* Push365UITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Push365UITests;
+			sourceTree = "<group>";
+		};
+		7EE9A6512F223FCA00561F0F /* Push365 Watch App Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Push365 Watch App Watch App";
+			sourceTree = "<group>";
+		};
+		7EE9A65F2F223FCE00561F0F /* Push365 Watch App Watch AppTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Push365 Watch App Watch AppTests";
+			sourceTree = "<group>";
+		};
+		7EE9A6692F223FCE00561F0F /* Push365 Watch App Watch AppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Push365 Watch App Watch AppUITests";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -69,6 +126,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7EE9A64D2F223FCA00561F0F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7EE9A6592F223FCE00561F0F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7EE9A6632F223FCE00561F0F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -78,6 +156,9 @@
 				7EE9A5F02F1FB11A00561F0F /* Push365 */,
 				7EE9A5FE2F1FB11D00561F0F /* Push365Tests */,
 				7EE9A6082F1FB11D00561F0F /* Push365UITests */,
+				7EE9A6512F223FCA00561F0F /* Push365 Watch App Watch App */,
+				7EE9A65F2F223FCE00561F0F /* Push365 Watch App Watch AppTests */,
+				7EE9A6692F223FCE00561F0F /* Push365 Watch App Watch AppUITests */,
 				7EE9A5EF2F1FB11A00561F0F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +169,9 @@
 				7EE9A5EE2F1FB11A00561F0F /* Push365.app */,
 				7EE9A5FB2F1FB11D00561F0F /* Push365Tests.xctest */,
 				7EE9A6052F1FB11D00561F0F /* Push365UITests.xctest */,
+				7EE9A6502F223FCA00561F0F /* Push365 Watch App Watch App.app */,
+				7EE9A65C2F223FCE00561F0F /* Push365 Watch App Watch AppTests.xctest */,
+				7EE9A6662F223FCE00561F0F /* Push365 Watch App Watch AppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -102,10 +186,12 @@
 				7EE9A5EA2F1FB11A00561F0F /* Sources */,
 				7EE9A5EB2F1FB11A00561F0F /* Frameworks */,
 				7EE9A5EC2F1FB11A00561F0F /* Resources */,
+				7EE9A6742F223FCE00561F0F /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				7EE9A66F2F223FCE00561F0F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				7EE9A5F02F1FB11A00561F0F /* Push365 */,
@@ -163,6 +249,74 @@
 			productReference = 7EE9A6052F1FB11D00561F0F /* Push365UITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		7EE9A64F2F223FCA00561F0F /* Push365 Watch App Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7EE9A6712F223FCE00561F0F /* Build configuration list for PBXNativeTarget "Push365 Watch App Watch App" */;
+			buildPhases = (
+				7EE9A64C2F223FCA00561F0F /* Sources */,
+				7EE9A64D2F223FCA00561F0F /* Frameworks */,
+				7EE9A64E2F223FCA00561F0F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7EE9A6512F223FCA00561F0F /* Push365 Watch App Watch App */,
+			);
+			name = "Push365 Watch App Watch App";
+			packageProductDependencies = (
+			);
+			productName = "Push365 Watch App Watch App";
+			productReference = 7EE9A6502F223FCA00561F0F /* Push365 Watch App Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7EE9A65B2F223FCE00561F0F /* Push365 Watch App Watch AppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7EE9A6752F223FCE00561F0F /* Build configuration list for PBXNativeTarget "Push365 Watch App Watch AppTests" */;
+			buildPhases = (
+				7EE9A6582F223FCE00561F0F /* Sources */,
+				7EE9A6592F223FCE00561F0F /* Frameworks */,
+				7EE9A65A2F223FCE00561F0F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7EE9A65E2F223FCE00561F0F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7EE9A65F2F223FCE00561F0F /* Push365 Watch App Watch AppTests */,
+			);
+			name = "Push365 Watch App Watch AppTests";
+			packageProductDependencies = (
+			);
+			productName = "Push365 Watch App Watch AppTests";
+			productReference = 7EE9A65C2F223FCE00561F0F /* Push365 Watch App Watch AppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		7EE9A6652F223FCE00561F0F /* Push365 Watch App Watch AppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7EE9A6782F223FCE00561F0F /* Build configuration list for PBXNativeTarget "Push365 Watch App Watch AppUITests" */;
+			buildPhases = (
+				7EE9A6622F223FCE00561F0F /* Sources */,
+				7EE9A6632F223FCE00561F0F /* Frameworks */,
+				7EE9A6642F223FCE00561F0F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7EE9A6682F223FCE00561F0F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7EE9A6692F223FCE00561F0F /* Push365 Watch App Watch AppUITests */,
+			);
+			name = "Push365 Watch App Watch AppUITests";
+			packageProductDependencies = (
+			);
+			productName = "Push365 Watch App Watch AppUITests";
+			productReference = 7EE9A6662F223FCE00561F0F /* Push365 Watch App Watch AppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -184,6 +338,17 @@
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = 7EE9A5ED2F1FB11A00561F0F;
 					};
+					7EE9A64F2F223FCA00561F0F = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					7EE9A65B2F223FCE00561F0F = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 7EE9A64F2F223FCA00561F0F;
+					};
+					7EE9A6652F223FCE00561F0F = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 7EE9A64F2F223FCA00561F0F;
+					};
 				};
 			};
 			buildConfigurationList = 7EE9A5E92F1FB11A00561F0F /* Build configuration list for PBXProject "Push365" */;
@@ -203,6 +368,9 @@
 				7EE9A5ED2F1FB11A00561F0F /* Push365 */,
 				7EE9A5FA2F1FB11D00561F0F /* Push365Tests */,
 				7EE9A6042F1FB11D00561F0F /* Push365UITests */,
+				7EE9A64F2F223FCA00561F0F /* Push365 Watch App Watch App */,
+				7EE9A65B2F223FCE00561F0F /* Push365 Watch App Watch AppTests */,
+				7EE9A6652F223FCE00561F0F /* Push365 Watch App Watch AppUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -223,6 +391,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7EE9A6032F1FB11D00561F0F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7EE9A64E2F223FCA00561F0F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7EE9A65A2F223FCE00561F0F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7EE9A6642F223FCE00561F0F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -253,6 +442,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7EE9A64C2F223FCA00561F0F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7EE9A6582F223FCE00561F0F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7EE9A6622F223FCE00561F0F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -265,6 +475,21 @@
 			isa = PBXTargetDependency;
 			target = 7EE9A5ED2F1FB11A00561F0F /* Push365 */;
 			targetProxy = 7EE9A6062F1FB11D00561F0F /* PBXContainerItemProxy */;
+		};
+		7EE9A65E2F223FCE00561F0F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7EE9A64F2F223FCA00561F0F /* Push365 Watch App Watch App */;
+			targetProxy = 7EE9A65D2F223FCE00561F0F /* PBXContainerItemProxy */;
+		};
+		7EE9A6682F223FCE00561F0F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7EE9A64F2F223FCA00561F0F /* Push365 Watch App Watch App */;
+			targetProxy = 7EE9A6672F223FCE00561F0F /* PBXContainerItemProxy */;
+		};
+		7EE9A66F2F223FCE00561F0F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7EE9A64F2F223FCA00561F0F /* Push365 Watch App Watch App */;
+			targetProxy = 7EE9A66E2F223FCE00561F0F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -393,6 +618,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Push365/Push365.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5898M74MND;
@@ -425,6 +651,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Push365/Push365.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5898M74MND;
@@ -532,6 +759,162 @@
 			};
 			name = Release;
 		};
+		7EE9A6722F223FCE00561F0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5898M74MND;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Push365 Watch App";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = Test.Push365;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Test.Push365.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		7EE9A6732F223FCE00561F0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5898M74MND;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Push365 Watch App";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = Test.Push365;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Test.Push365.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+		7EE9A6762F223FCE00561F0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5898M74MND;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Test.Push365-Watch-App-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Push365 Watch App Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Push365 Watch App Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		7EE9A6772F223FCE00561F0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5898M74MND;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Test.Push365-Watch-App-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Push365 Watch App Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Push365 Watch App Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+		7EE9A6792F223FCE00561F0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5898M74MND;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Test.Push365-Watch-App-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "Push365 Watch App Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		7EE9A67A2F223FCE00561F0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5898M74MND;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Test.Push365-Watch-App-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "Push365 Watch App Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -567,6 +950,33 @@
 			buildConfigurations = (
 				7EE9A6162F1FB11D00561F0F /* Debug */,
 				7EE9A6172F1FB11D00561F0F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7EE9A6712F223FCE00561F0F /* Build configuration list for PBXNativeTarget "Push365 Watch App Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7EE9A6722F223FCE00561F0F /* Debug */,
+				7EE9A6732F223FCE00561F0F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7EE9A6752F223FCE00561F0F /* Build configuration list for PBXNativeTarget "Push365 Watch App Watch AppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7EE9A6762F223FCE00561F0F /* Debug */,
+				7EE9A6772F223FCE00561F0F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7EE9A6782F223FCE00561F0F /* Build configuration list for PBXNativeTarget "Push365 Watch App Watch AppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7EE9A6792F223FCE00561F0F /* Debug */,
+				7EE9A67A2F223FCE00561F0F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

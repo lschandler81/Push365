@@ -22,6 +22,8 @@ struct WelcomeView: View {
     @State private var startDate: Date = Date()
     @State private var enableBackfill: Bool = false
     @State private var showModeInfo: Bool = false
+    @State private var isSubmitting: Bool = false
+    @State private var errorMessage: String?
     
     @FocusState private var focusedField: FocusField?
     

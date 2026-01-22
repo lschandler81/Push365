@@ -19,7 +19,15 @@ struct Push365App: App {
             LogEntry.self
         ])
         
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        // Use shared App Group container
+        guard let containerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.com.lschandler81.Push365"
+        ) else {
+            fatalError("Failed to get App Group container URL. Ensure App Group capability is configured.")
+        }
+        
+        let storeURL = containerURL.appendingPathComponent("Push365.store")
+        let modelConfiguration = ModelConfiguration(url: storeURL)
         
         do {
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -30,10 +38,9 @@ struct Push365App: App {
             #if DEBUG
             print("DEBUG: Attempting to delete and recreate the SwiftData store.")
 
-            let url = modelConfiguration.url
-            try? FileManager.default.removeItem(at: url)
-            try? FileManager.default.removeItem(at: url.deletingPathExtension().appendingPathExtension("sqlite-shm"))
-            try? FileManager.default.removeItem(at: url.deletingPathExtension().appendingPathExtension("sqlite-wal"))
+            try? FileManager.default.removeItem(at: storeURL)
+            try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
+            try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
 
             do {
                 modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
