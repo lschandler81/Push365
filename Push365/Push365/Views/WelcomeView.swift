@@ -401,7 +401,11 @@ struct WelcomeView: View {
                 
                 // Handle backfill if enabled
                 if enableBackfill && selectedStartDate < today {
-                    let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+                    guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else {
+                        errorMessage = "Unable to calculate backfill dates. Please try again."
+                        isSubmitting = false
+                        return
+                    }
                     
                     // Create DayRecords for each day from start date to yesterday
                     var currentDate = selectedStartDate
@@ -422,7 +426,10 @@ struct WelcomeView: View {
                         modelContext.insert(record)
                         
                         backfilledCount += 1
-                        currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+                        guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                            break
+                        }
+                        currentDate = nextDate
                     }
                     
                     // Update streak tracking

@@ -169,15 +169,19 @@ struct HistoryView: View {
         
         // Check if we can go back
         let canGoBack: Bool = {
-            let displayedDate = calendar.date(from: DateComponents(year: displayedMonth.year, month: displayedMonth.month))!
-            let startDate = calendar.date(from: DateComponents(year: startMonth.year, month: startMonth.month))!
+            guard let displayedDate = calendar.date(from: DateComponents(year: displayedMonth.year, month: displayedMonth.month)),
+                  let startDate = calendar.date(from: DateComponents(year: startMonth.year, month: startMonth.month)) else {
+                return false
+            }
             return displayedDate > startDate
         }()
         
         // Check if we can go forward (not past current month)
         let canGoForward: Bool = {
-            let displayedDate = calendar.date(from: DateComponents(year: displayedMonth.year, month: displayedMonth.month))!
-            let currentDate = calendar.date(from: DateComponents(year: currentMonth.year, month: currentMonth.month))!
+            guard let displayedDate = calendar.date(from: DateComponents(year: displayedMonth.year, month: displayedMonth.month)),
+                  let currentDate = calendar.date(from: DateComponents(year: currentMonth.year, month: currentMonth.month)) else {
+                return false
+            }
             return displayedDate < currentDate
         }()
         
@@ -228,14 +232,22 @@ struct HistoryView: View {
         let currentMonth = selectedMonth ?? {
             let today = calendar.startOfDay(for: Date())
             let components = calendar.dateComponents([.year, .month], from: today)
-            return MonthIdentifier(year: components.year!, month: components.month!)
+            guard let year = components.year, let month = components.month else {
+                return MonthIdentifier(year: 2026, month: 1)
+            }
+            return MonthIdentifier(year: year, month: month)
         }()
         
-        let currentDate = calendar.date(from: DateComponents(year: currentMonth.year, month: currentMonth.month))!
-        guard let newDate = calendar.date(byAdding: .month, value: offset, to: currentDate) else { return }
+        guard let currentDate = calendar.date(from: DateComponents(year: currentMonth.year, month: currentMonth.month)),
+              let newDate = calendar.date(byAdding: .month, value: offset, to: currentDate) else {
+            return
+        }
         
         let newComponents = calendar.dateComponents([.year, .month], from: newDate)
-        selectedMonth = MonthIdentifier(year: newComponents.year!, month: newComponents.month!)
+        guard let year = newComponents.year, let month = newComponents.month else {
+            return
+        }
+        selectedMonth = MonthIdentifier(year: year, month: month)
     }
     
     private func monthDisplayName(year: Int, month: Int) -> String {
