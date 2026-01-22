@@ -160,10 +160,16 @@ struct HistoryView: View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let todayComponents = calendar.dateComponents([.year, .month], from: today)
-        let currentMonth = MonthIdentifier(year: todayComponents.year!, month: todayComponents.month!)
+        guard let currentYear = todayComponents.year, let currentMonthNum = todayComponents.month else {
+            return AnyView(EmptyView())
+        }
+        let currentMonth = MonthIdentifier(year: currentYear, month: currentMonthNum)
         
         let startComponents = calendar.dateComponents([.year, .month], from: userSettings.programStartDate)
-        let startMonth = MonthIdentifier(year: startComponents.year!, month: startComponents.month!)
+        guard let startYear = startComponents.year, let startMonthNum = startComponents.month else {
+            return AnyView(EmptyView())
+        }
+        let startMonth = MonthIdentifier(year: startYear, month: startMonthNum)
         
         let displayedMonth = selectedMonth ?? currentMonth
         
@@ -396,7 +402,11 @@ struct HistoryView: View {
                 monthsToShow = [(year: selected.year, month: selected.month)]
             } else {
                 let components = calendar.dateComponents([.year, .month], from: today)
-                monthsToShow = [(year: components.year!, month: components.month!)]
+                guard let year = components.year, let month = components.month else {
+                    monthsToShow = []
+                    return
+                }
+                monthsToShow = [(year: year, month: month)]
             }
             
         case .allTime:
@@ -410,7 +420,10 @@ struct HistoryView: View {
             while let currentDate = calendar.date(from: current),
                   let startDate = calendar.date(from: startComponents),
                   currentDate >= startDate {
-                result.append((year: current.year!, month: current.month!))
+                guard let year = current.year, let month = current.month else {
+                    break
+                }
+                result.append((year: year, month: month))
                 
                 // Go back one month
                 if let prevMonth = calendar.date(byAdding: .month, value: -1, to: currentDate) {
