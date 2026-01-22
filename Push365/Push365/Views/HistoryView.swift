@@ -37,6 +37,7 @@ struct CalendarDay: Identifiable {
     let isToday: Bool
     let isFuture: Bool
     let isBeforeStart: Bool
+    let isPreTracking: Bool
     let isCurrentMonth: Bool
     let completed: Int
     let target: Int
@@ -249,7 +250,31 @@ struct HistoryView: View {
     
     @ViewBuilder
     private func monthlySummarySection(month: CalendarMonth) -> some View {
-        let eligibleDays = month.days.filter { $0.isCurrentMonth && !$0.isFuture && !$0.isBeforeStart }
+        if settings.first?.trackingStartDate == nil {
+            // No tracking start date set, show empty state
+            VStack(spacing: 8) {
+                Text("No data yet")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(DSColor.textPrimary)
+                Text("Complete a day to see your monthly stats.")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(DSColor.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(DSColor.surface.opacity(0.5))
+            )
+        } else {
+        
+        // Eligible days: tracked, not future, >= program start
+        let eligibleDays = month.days.filter { day in
+            day.isCurrentMonth &&
+            !day.isFuture &&
+            !day.isBeforeStart &&
+            !day.isPreTracking
+        }
         
         if eligibleDays.isEmpty {
             // Empty state
@@ -310,13 +335,28 @@ struct HistoryView: View {
                     .fill(DSColor.surface.opacity(0.5))
             )
         }
+        }
     }
     
     private func calculateMonthlySummary(eligibleDays: [CalendarDay]) -> (completed: Int, missed: Int, completionRate: Int) {
-        let completed = eligibleDays.filter { $0.isComplete }.count
-        let total = eligibleDays.count
-        let missed = total - completed
+        // Build dictionary of records for quick lookup
+        let recordDict = Dictionary(uniqueKeysWithValues: allRecords.map { ($0.dateKey, $0) })
         
+        var completed = 0
+        var missed = 0
+        
+        for day in eligibleDays {
+            if let record = recordDict[day.date] {
+                if record.isComplete {
+                    completed += 1
+                } else {
+                    missed += 1
+                }
+            }
+            // Days without records are NOT counted as missed (pre-tracking)
+        }
+        
+        let total = completed + missed
         let completionRate: Int = total > 0 ? Int((Double(completed) / Double(total)) * 100) : 0
         
         return (completed: completed, missed: missed, completionRate: completionRate)
@@ -415,11 +455,14 @@ struct HistoryView: View {
                 isToday: false,
                 isFuture: true,
                 isBeforeStart: false,
+                isPreTracking: false,
                 isCurrentMonth: false,
                 completed: 0,
                 target: 0
             ))
         }
+        
+        let trackingStart = calendar.startOfDay(for: userSettings.trackingStartDate ?? today)
         
         // Add actual days of month
         for day in 1...daysInMonth {
@@ -431,6 +474,7 @@ struct HistoryView: View {
             let isFuture = dateKey > today
             let programStart = calendar.startOfDay(for: userSettings.programStartDate)
             let isBeforeStart = dateKey < programStart
+            let isPreTracking = dateKey >= programStart && dateKey < trackingStart && !isBeforeStart
             
             // Calculate day number
             let dayNumber = DayCalculator.dayNumber(for: dateKey, startDate: userSettings.programStartDate)
@@ -445,6 +489,7 @@ struct HistoryView: View {
                     isToday: isToday,
                     isFuture: isFuture,
                     isBeforeStart: isBeforeStart,
+                    isPreTracking: isPreTracking,
                     isCurrentMonth: true,
                     completed: record.completed,
                     target: record.target
@@ -460,6 +505,7 @@ struct HistoryView: View {
                     isToday: isToday,
                     isFuture: isFuture,
                     isBeforeStart: isBeforeStart,
+                    isPreTracking: isPreTracking,
                     isCurrentMonth: true,
                     completed: 0,
                     target: target
@@ -512,7 +558,7 @@ struct MonthCalendarView: View {
                         )) {
                             CalendarDayTile(day: day)
                         }
-                        .disabled(day.isFuture || day.isBeforeStart)
+                        .disabled(day.isFuture || day.isBeforeStart || day.isPreTracking)
                         .buttonStyle(PlainButtonStyle())
                     } else {
                         // Empty cell for offset
@@ -537,8 +583,8 @@ struct CalendarDayTile: View {
         ZStack {
             // Background
             RoundedRectangle(cornerRadius: 8)
-                .fill(day.isFuture || day.isBeforeStart ? DSColor.background : DSColor.surface)
-                .opacity(day.isFuture || day.isBeforeStart ? 0.3 : 1.0)
+                .fill(day.isFuture || day.isBeforeStart || day.isPreTracking ? DSColor.background : DSColor.surface)
+                .opacity(day.isFuture || day.isBeforeStart || day.isPreTracking ? 0.3 : 1.0)
             
             // Today outline
             if day.isToday {
@@ -547,7 +593,7 @@ struct CalendarDayTile: View {
             }
             
             // Completion indicator
-            if day.isComplete && !day.isBeforeStart {
+            if day.isComplete && !day.isBeforeStart && !day.isPreTracking {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(DSColor.success.opacity(0.15))
                 
@@ -566,13 +612,18 @@ struct CalendarDayTile: View {
                 Text("\(day.dayOfMonth)")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(DSColor.textSecondary.opacity(0.15))
+            } else if day.isPreTracking {
+                // Pre-tracking days (between start and tracking start) - slightly less dim
+                Text("\(day.dayOfMonth)")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(DSColor.textSecondary.opacity(0.24))
             } else {
                 VStack(spacing: 2) {
                     Text("\(day.dayOfMonth)")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(day.isFuture ? DSColor.textSecondary.opacity(0.3) : DSColor.textPrimary)
                     
-                    // Past/today incomplete: grey hollow dot
+                    // Past/today incomplete: grey hollow dot (only for tracked days)
                     if !day.isFuture && day.isCurrentMonth {
                         Circle()
                             .stroke(DSColor.textSecondary.opacity(0.3), lineWidth: 1.5)

@@ -59,6 +59,7 @@ final class UserSettings {
     // Core settings
     var startDate: Date
     var programStartDate: Date
+    var trackingStartDate: Date?
     var modeRaw: String
     
     // Notifications
@@ -142,6 +143,7 @@ final class UserSettings {
         createdAt: Date = Date(),
         startDate: Date,
         programStartDate: Date? = nil,
+        trackingStartDate: Date? = nil,
         modeRaw: String = "flexible",
         notificationsEnabled: Bool = true,
         morningHour: Int = 8,
@@ -162,6 +164,7 @@ final class UserSettings {
         self.createdAt = createdAt
         self.startDate = startDate
         self.programStartDate = programStartDate ?? startDate
+        self.trackingStartDate = trackingStartDate
         self.modeRaw = modeRaw
         self.notificationsEnabled = notificationsEnabled
         self.morningHour = morningHour

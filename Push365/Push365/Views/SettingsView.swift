@@ -11,6 +11,10 @@ import SwiftData
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settings: [UserSettings]
+    @Query private var allRecords: [DayRecord]
+    
+    @State private var showingResetConfirmation = false
+    @State private var resetConfirmationText = ""
     
     private let progressStore = ProgressStore()
     private let notificationManager = NotificationManager()
@@ -120,27 +124,27 @@ struct SettingsView: View {
                                 .tracking(1)
                             
                             VStack(alignment: .leading, spacing: 12) {
-                                Picker("Progress Mode", selection: Binding(
-                                    get: { userSettings.mode },
-                                    set: { newMode in
-                                        userSettings.mode = newMode
-                                        try? modelContext.save()
-                                    }
-                                )) {
-                                    ForEach(ProgressMode.allCases) { mode in
-                                        Text(mode.displayName).tag(mode)
-                                    }
+                                // Read-only mode display
+                                HStack {
+                                    Text(userSettings.mode.displayName)
+                                        .font(.system(size: 17, weight: .semibold))
+                                        .foregroundStyle(DSColor.textPrimary)
+                                    
+                                    Spacer()
                                 }
-                                .pickerStyle(.segmented)
-                                .labelsHidden()
+                                .padding(12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(DSColor.background.opacity(0.5))
+                                )
                                 
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text(userSettings.mode.shortDescription)
+                                    Text(userSettings.mode == .strict ? "Target matches the day number." : "Target only increases after you complete it.")
                                         .font(DSFont.caption)
                                         .foregroundStyle(DSColor.textSecondary.opacity(0.7))
                                         .fixedSize(horizontal: false, vertical: true)
                                     
-                                    Text("Changes apply from tomorrow.")
+                                    Text("To change mode, reset and start again.")
                                         .font(DSFont.caption)
                                         .foregroundStyle(DSColor.textSecondary.opacity(0.5))
                                 }
@@ -219,12 +223,61 @@ struct SettingsView: View {
                                 .fill(DSColor.surface)
                         )
                         .padding(.horizontal, 20)
+                        
+                        // Reset Section (Danger Zone)
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Reset")
+                                .font(DSFont.sectionHeader)
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .textCase(.uppercase)
+                                .tracking(1)
+                            
+                            Button {
+                                showingResetConfirmation = true
+                            } label: {
+                                HStack {
+                                    Image(systemName: "exclamationmark.triangle")
+                                        .font(.system(size: 16))
+                                    Text("Reset app data")
+                                        .font(DSFont.button)
+                                }
+                                .foregroundStyle(.red)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(DSColor.background)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .strokeBorder(Color.red.opacity(0.3), lineWidth: 1)
+                                )
+                            }
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: DSRadius.card)
+                                .fill(DSColor.surface)
+                        )
+                        .padding(.horizontal, 20)
                     }
                     .padding(.vertical, 24)
                 }
                 .background(DSColor.background.ignoresSafeArea())
                 .navigationTitle("Settings")
                 .toolbarColorScheme(.dark, for: .navigationBar)
+                .sheet(isPresented: $showingResetConfirmation) {
+                    ResetConfirmationSheet(
+                        confirmationText: $resetConfirmationText,
+                        onConfirm: {
+                            performReset()
+                        },
+                        onCancel: {
+                            showingResetConfirmation = false
+                            resetConfirmationText = ""
+                        }
+                    )
+                }
             } else {
                 ProgressView()
                     .tint(DSColor.accent)
@@ -278,6 +331,114 @@ struct SettingsView: View {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+    
+    private func performReset() {
+        // Delete all records
+        for record in allRecords {
+            modelContext.delete(record)
+        }
+        
+        // Reset UserSettings
+        if let settings = settings.first {
+            settings.hasCompletedOnboarding = false
+            settings.programStartDate = Date()
+            settings.trackingStartDate = nil
+            settings.currentStreak = 0
+            settings.longestStreak = 0
+            settings.lastCompletedDateKey = nil
+            settings.lastStreakEvaluatedDateKey = nil
+            settings.lastCompletedTarget = 0
+            settings.modeRaw = "flexible"
+        }
+        
+        try? modelContext.save()
+        
+        // Dismiss confirmation
+        showingResetConfirmation = false
+        resetConfirmationText = ""
+    }
+}
+
+// MARK: - Reset Confirmation Sheet
+
+struct ResetConfirmationSheet: View {
+    @Binding var confirmationText: String
+    let onConfirm: () -> Void
+    let onCancel: () -> Void
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                DSColor.background.ignoresSafeArea()
+                
+                VStack(spacing: 32) {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 48))
+                            .foregroundStyle(.red.opacity(0.8))
+                        
+                        Text("Reset App Data")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                        
+                        Text("This will permanently delete all your progress, logs, and history. This action cannot be undone.")
+                            .font(.system(size: 15))
+                            .foregroundStyle(DSColor.textSecondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Type RESET to confirm")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(DSColor.textSecondary)
+                        
+                        TextField("RESET", text: $confirmationText)
+                            .font(.system(size: 17))
+                            .foregroundStyle(DSColor.textPrimary)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.characters)
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(DSColor.surface)
+                            )
+                    }
+                    .padding(.horizontal, 20)
+                    
+                    Button {
+                        onConfirm()
+                    } label: {
+                        Text("Delete Everything")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(confirmationText == "RESET" ? Color.red : Color.red.opacity(0.4))
+                            )
+                    }
+                    .disabled(confirmationText != "RESET")
+                    .padding(.horizontal, 20)
+                    
+                    Spacer()
+                }
+                .padding(.top, 40)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                    .foregroundStyle(DSColor.accent)
+                }
+            }
+            .toolbarColorScheme(.dark, for: .navigationBar)
+        }
+        .presentationDetents([.medium])
     }
 }
 

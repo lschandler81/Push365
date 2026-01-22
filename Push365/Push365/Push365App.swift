@@ -59,34 +59,16 @@ struct Push365App: App {
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settings: [UserSettings]
-    @State private var hasCheckedOnboarding = false
-    @State private var showMainApp = false
     
     var body: some View {
         Group {
-            if !hasCheckedOnboarding {
-                // Loading state while checking
-                Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
-                    .ignoresSafeArea()
-            } else if showMainApp {
+            if let userSettings = settings.first, userSettings.hasCompletedOnboarding {
                 MainTabView()
             } else {
                 WelcomeView(onComplete: {
-                    showMainApp = true
+                    // Onboarding completion is handled by settings update
                 })
             }
         }
-        .task {
-            checkOnboardingStatus()
-        }
-    }
-    
-    private func checkOnboardingStatus() {
-        if let userSettings = settings.first {
-            showMainApp = userSettings.hasCompletedOnboarding
-        } else {
-            showMainApp = false
-        }
-        hasCheckedOnboarding = true
     }
 }

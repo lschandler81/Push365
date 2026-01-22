@@ -17,7 +17,9 @@ struct WelcomeView: View {
     @State private var selectedMode: ProgressMode = .flexible
     @State private var showDatePicker: Bool = false
     @State private var alreadyStarted: Bool = false
-    @State private var yesterdayTarget: String = ""
+    @State private var startDate: Date = Date()
+    @State private var enableBackfill: Bool = false
+    @State private var showModeInfo: Bool = false
     
     private let store = ProgressStore()
     private let notificationManager = NotificationManager()
@@ -63,7 +65,169 @@ struct WelcomeView: View {
                     }
                     .padding(.top, 60)
                     
-                    // Optional fields card
+                    // Progress Mode Card (FIRST - defines the rules)
+                    VStack(alignment: .leading, spacing: 20) {
+                        HStack {
+                            Text("Progress Mode")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .textCase(.uppercase)
+                                .tracking(1)
+                            
+                            Spacer()
+                            
+                            Button {
+                                showModeInfo = true
+                            } label: {
+                                Image(systemName: "info.circle")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                            }
+                        }
+                        
+                        Picker("Mode", selection: $selectedMode) {
+                            ForEach(ProgressMode.allCases) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        
+                        Text(selectedMode == .strict ? "Target matches the day number." : "Target only increases after you complete it.")
+                            .font(.system(size: 14))
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                    }
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(DSColor.surface)
+                    )
+                    .padding(.horizontal, 20)
+                    
+                    // Start Context Card
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Start")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                            .textCase(.uppercase)
+                            .tracking(1)
+                        
+                        VStack(spacing: 16) {
+                            // Starting today (default)
+                            Button {
+                                alreadyStarted = false
+                                startDate = Date()
+                                enableBackfill = false
+                            } label: {
+                                HStack {
+                                    Image(systemName: alreadyStarted ? "circle" : "circle.fill")
+                                        .font(.system(size: 20))
+                                        .foregroundStyle(DSColor.accent)
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Starting today")
+                                            .font(.system(size: 15, weight: .medium))
+                                            .foregroundStyle(DSColor.textPrimary)
+                                        Text("Begin your Push365 challenge now.")
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                .padding(12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(alreadyStarted ? Color.clear : DSColor.background.opacity(0.5))
+                                )
+                            }
+                            
+                            // Already started
+                            Button {
+                                alreadyStarted = true
+                            } label: {
+                                HStack {
+                                    Image(systemName: alreadyStarted ? "circle.fill" : "circle")
+                                        .font(.system(size: 20))
+                                        .foregroundStyle(DSColor.accent)
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("I've already started")
+                                            .font(.system(size: 15, weight: .medium))
+                                            .foregroundStyle(DSColor.textPrimary)
+                                        Text("Backdate your start for accurate stats.")
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                .padding(12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(alreadyStarted ? DSColor.background.opacity(0.5) : Color.clear)
+                                )
+                            }
+                        }
+                        
+                        // Show date picker if already started
+                        if alreadyStarted {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Divider()
+                                    .background(DSColor.textSecondary.opacity(0.2))
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Start date")
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundStyle(DSColor.textSecondary)
+                                    
+                                    DatePicker(
+                                        "",
+                                        selection: $startDate,
+                                        in: ...Date(),
+                                        displayedComponents: .date
+                                    )
+                                    .datePickerStyle(.compact)
+                                    .labelsHidden()
+                                    .colorScheme(.dark)
+                                    .tint(DSColor.accent)
+                                    
+                                    Text("We'll label today as Day \(Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: startDate), to: Calendar.current.startOfDay(for: Date())).day! + 1) from your start date.")
+                                        .font(.system(size: 13))
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                }
+                                
+                                // Backfill toggle (only if start date is before today)
+                                let today = Calendar.current.startOfDay(for: Date())
+                                let selectedDay = Calendar.current.startOfDay(for: startDate)
+                                
+                                if selectedDay < today {
+                                    Divider()
+                                        .background(DSColor.textSecondary.opacity(0.2))
+                                    
+                                    Toggle(isOn: $enableBackfill) {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text("Mark previous days as complete")
+                                                .font(.system(size: 15, weight: .medium))
+                                                .foregroundStyle(DSColor.textPrimary)
+                                            
+                                            Text("Use this if you've already been doing Push365 and want accurate streaks and stats.")
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                        }
+                                    }
+                                    .tint(DSColor.accent)
+                                }
+                            }
+                        }
+                    }
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(DSColor.surface)
+                    )
+                    .padding(.horizontal, 20)
+                    
+                    // About You Card
                     VStack(alignment: .leading, spacing: 20) {
                         Text("About You (Optional)")
                             .font(.system(size: 14, weight: .medium))
@@ -73,7 +237,7 @@ struct WelcomeView: View {
                         
                         // Name field
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Name")
+                            Text("Name (optional)")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundStyle(DSColor.textSecondary)
                             
@@ -90,36 +254,27 @@ struct WelcomeView: View {
                         
                         // Birthday field
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Birthday")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundStyle(DSColor.textSecondary)
-                            
                             Button {
                                 showDatePicker.toggle()
                             } label: {
                                 HStack {
-                                    Text(showDatePicker ? "Selected" : "Optional")
-                                        .font(.system(size: 17))
-                                        .foregroundStyle(DSColor.textPrimary.opacity(showDatePicker ? 1 : 0.5))
+                                    Text("Birthday (optional)")
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundStyle(DSColor.textSecondary)
                                     
                                     Spacer()
                                     
                                     if showDatePicker {
                                         Text(dateOfBirth, style: .date)
-                                            .font(.system(size: 17))
+                                            .font(.system(size: 15))
                                             .foregroundStyle(DSColor.textPrimary)
                                     }
                                     
                                     Image(systemName: "chevron.right")
-                                        .font(.system(size: 14))
+                                        .font(.system(size: 12))
                                         .foregroundStyle(DSColor.textSecondary.opacity(0.5))
                                         .rotationEffect(.degrees(showDatePicker ? 90 : 0))
                                 }
-                                .padding(12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .fill(DSColor.background)
-                                )
                             }
                             
                             if showDatePicker {
@@ -134,102 +289,6 @@ struct WelcomeView: View {
                                 .colorScheme(.dark)
                             }
                         }
-                    }
-                    .padding(20)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(DSColor.surface)
-                    )
-                    .padding(.horizontal, 20)
-                    
-                    // Already Started section
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Already started?")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(DSColor.textSecondary.opacity(0.8))
-                            .textCase(.uppercase)
-                            .tracking(1)
-                        
-                        Picker("Status", selection: $alreadyStarted) {
-                            Text("Starting today").tag(false)
-                            Text("I've already started").tag(true)
-                        }
-                        .pickerStyle(.segmented)
-                        
-                        if alreadyStarted {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Yesterday's target")
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundStyle(DSColor.textSecondary)
-                                
-                                TextField("e.g., 21", text: $yesterdayTarget)
-                                    .font(.system(size: 17))
-                                    .foregroundStyle(DSColor.textPrimary)
-                                    .keyboardType(.numberPad)
-                                    .padding(12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .fill(DSColor.background)
-                                    )
-                                
-                                Text("Enter the push-ups you were meant to do yesterday.")
-                                    .font(.system(size: 13))
-                                    .foregroundStyle(DSColor.textSecondary.opacity(0.6))
-                            }
-                        }
-                    }
-                    .padding(20)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(DSColor.surface)
-                    )
-                    .padding(.horizontal, 20)
-                    
-                    // Progress Mode selection
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Progress Mode")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(DSColor.textSecondary.opacity(0.8))
-                            .textCase(.uppercase)
-                            .tracking(1)
-                        
-                        Picker("Mode", selection: $selectedMode) {
-                            ForEach(ProgressMode.allCases) { mode in
-                                Text(mode.displayName).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        
-                        // Mode explanation
-                        VStack(alignment: .leading, spacing: 12) {
-                            if selectedMode == .strict {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text("Today's target equals the day number.")
-                                        .font(.system(size: 15))
-                                        .foregroundStyle(DSColor.textPrimary)
-                                    
-                                    Text("Example: Day 21 → target 21, even if you missed yesterday.")
-                                        .font(.system(size: 14))
-                                        .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                                }
-                            } else {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text("Your target only increases after you complete it.")
-                                        .font(.system(size: 15))
-                                        .foregroundStyle(DSColor.textPrimary)
-                                    
-                                    Text("Example: If you miss a day, tomorrow stays at last completed + 1.")
-                                        .font(.system(size: 14))
-                                        .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                                }
-                            }
-                        }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(DSColor.background)
-                        )
                     }
                     .padding(20)
                     .background(
@@ -256,6 +315,9 @@ struct WelcomeView: View {
                     .padding(.bottom, 40)
                 }
             }
+            .sheet(isPresented: $showModeInfo) {
+                ModeExplanationSheet()
+            }
         }
     }
     
@@ -267,39 +329,53 @@ struct WelcomeView: View {
                 
                 let calendar = Calendar.current
                 let today = calendar.startOfDay(for: Date())
-                let yesterday = calendar.date(byAdding: .day, value: -1, to: today) ?? today
-                let yesterdayKey = calendar.startOfDay(for: yesterday)
+                let selectedStartDate = calendar.startOfDay(for: startDate)
                 
-                // Handle "Already started" logic
-                if alreadyStarted, let targetValue = Int(yesterdayTarget), targetValue >= 1 {
-                    // Clamp to reasonable range
-                    let clampedTarget = min(targetValue, 365)
-                    
-                    // Calculate programStartDate so yesterday would be day N
-                    // If yesterday should be day N, then programStart = yesterday - (N - 1) days
-                    let daysBack = clampedTarget - 1
-                    if let calculatedStart = calendar.date(byAdding: .day, value: -daysBack, to: yesterdayKey) {
-                        userSettings.programStartDate = calculatedStart
-                    } else {
-                        userSettings.programStartDate = today
-                    }
-                    
-                    // Set completion tracking
-                    userSettings.lastCompletedTarget = clampedTarget
-                    userSettings.lastCompletedDateKey = yesterdayKey
-                    userSettings.currentStreak = 0 // Conservative: don't assume yesterday was completed
-                    // longestStreak remains unchanged
-                } else {
-                    // Starting today: Day 1
-                    userSettings.programStartDate = today
-                    // Don't modify streak/completion fields - let first completion handle it
-                }
+                // Set program start date and tracking start date
+                userSettings.programStartDate = selectedStartDate
+                userSettings.trackingStartDate = today
                 
                 // Save onboarding data
                 userSettings.displayName = displayName.isEmpty ? nil : displayName
                 userSettings.dateOfBirth = showDatePicker ? dateOfBirth : nil
                 userSettings.mode = selectedMode
                 userSettings.hasCompletedOnboarding = true
+                
+                // Handle backfill if enabled
+                if enableBackfill && selectedStartDate < today {
+                    let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+                    
+                    // Create DayRecords for each day from start date to yesterday
+                    var currentDate = selectedStartDate
+                    var backfilledCount = 0
+                    
+                    while currentDate <= yesterday {
+                        let dayNum = DayCalculator.dayNumber(for: currentDate, startDate: selectedStartDate)
+                        let targetValue = max(1, dayNum)
+                        
+                        // Create the day record marked as complete (no individual logs)
+                        let record = DayRecord(
+                            dateKey: currentDate,
+                            dayNumber: dayNum,
+                            target: targetValue,
+                            completed: targetValue
+                        )
+                        
+                        modelContext.insert(record)
+                        
+                        backfilledCount += 1
+                        currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+                    }
+                    
+                    // Update streak tracking
+                    if backfilledCount > 0 {
+                        userSettings.currentStreak = backfilledCount
+                        userSettings.longestStreak = backfilledCount
+                        userSettings.lastCompletedDateKey = yesterday
+                        let yesterdayNum = DayCalculator.dayNumber(for: yesterday, startDate: selectedStartDate)
+                        userSettings.lastCompletedTarget = max(1, yesterdayNum)
+                    }
+                }
                 
                 try modelContext.save()
                 
@@ -308,8 +384,8 @@ struct WelcomeView: View {
                 
                 if granted && userSettings.notificationsEnabled {
                     // Schedule notifications for today
-                    let today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
-                    notificationManager.scheduleNotifications(for: Date(), settings: userSettings, record: today)
+                    let todayRecord = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
+                    notificationManager.scheduleNotifications(for: Date(), settings: userSettings, record: todayRecord)
                 }
                 
                 // Complete
@@ -318,6 +394,79 @@ struct WelcomeView: View {
                 print("Error completing onboarding: \(error)")
             }
         }
+    }
+}
+
+// MARK: - Mode Explanation Sheet
+
+struct ModeExplanationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                DSColor.background.ignoresSafeArea()
+                
+                VStack(alignment: .leading, spacing: 32) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Strict Mode")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                        
+                        Text("Target matches the day number.")
+                            .font(.system(size: 15))
+                            .foregroundStyle(DSColor.textSecondary)
+                        
+                        Text("Example: If you start Jan 1: Day 3 target is 3.")
+                            .font(.system(size: 14))
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                            .padding(.leading, 12)
+                    }
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(DSColor.surface)
+                    )
+                    
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Flexible Mode")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                        
+                        Text("Target only increases after you complete it.")
+                            .font(.system(size: 15))
+                            .foregroundStyle(DSColor.textSecondary)
+                        
+                        Text("Example: If you miss a day: tomorrow stays at last completed + 1.")
+                            .font(.system(size: 14))
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                            .padding(.leading, 12)
+                    }
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(DSColor.surface)
+                    )
+                    
+                    Spacer()
+                }
+                .padding(20)
+            }
+            .navigationTitle("Progress Modes")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundStyle(DSColor.accent)
+                }
+            }
+            .toolbarColorScheme(.dark, for: .navigationBar)
+        }
+        .presentationDetents([.medium])
     }
 }
 
