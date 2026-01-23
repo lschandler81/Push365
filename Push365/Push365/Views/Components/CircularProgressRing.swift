@@ -160,6 +160,9 @@ struct CircularProgressRing: View {
                         Text(firstName)
                             .font(.system(size: 24, weight: .medium, design: .rounded))
                             .foregroundStyle(Color.white.opacity(0.92))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .minimumScaleFactor(0.65)
                     } else {
                         Text("Done for today")
                             .font(.system(size: 28, weight: .semibold, design: .rounded))

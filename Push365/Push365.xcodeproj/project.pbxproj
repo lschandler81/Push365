@@ -23,19 +23,6 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		7EE9A6742F223FCE00561F0F /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-			);
-			name = "Embed Watch Content";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		7EE9A5EE2F1FB11A00561F0F /* Push365.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Push365.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EE9A5FB2F1FB11D00561F0F /* Push365Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Push365Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,7 +102,6 @@
 				7EE9A5EA2F1FB11A00561F0F /* Sources */,
 				7EE9A5EB2F1FB11A00561F0F /* Frameworks */,
 				7EE9A5EC2F1FB11A00561F0F /* Resources */,
-				7EE9A6742F223FCE00561F0F /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
