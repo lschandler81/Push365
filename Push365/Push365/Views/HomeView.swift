@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
@@ -358,6 +359,9 @@ struct HomeView: View {
             // Schedule today's notifications
             if let settings = settings, let today = today {
                 notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
+                
+                // Update widget data
+                updateWidgetData(settings: settings, today: today)
             }
         } catch {
             errorMessage = "Error loading data: \(error.localizedDescription)"
@@ -387,6 +391,7 @@ struct HomeView: View {
             // Reschedule notifications with updated remaining count
             if let settings = settings, let today = today {
                 notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
+                updateWidgetData(settings: settings, today: today)
             }
         } catch {
             errorMessage = "Error logging: \(error.localizedDescription)"
@@ -406,6 +411,7 @@ struct HomeView: View {
             // Reschedule notifications with updated remaining count
             if let settings = settings, let today = today {
                 notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
+                updateWidgetData(settings: settings, today: today)
             }
         } catch {
             errorMessage = "Error undoing: \(error.localizedDescription)"
@@ -443,6 +449,9 @@ struct HomeView: View {
             // Cancel notifications for today
             notificationManager.cancelTodaysNotifications()
             
+            // Update widget
+            updateWidgetData(settings: settings, today: today)
+            
             errorMessage = nil
         } catch {
             errorMessage = "Error completing protocol day: \(error.localizedDescription)"
@@ -462,6 +471,24 @@ struct HomeView: View {
         default:
             return nil
         }
+    }
+    
+    private func updateWidgetData(settings: UserSettings, today: DayRecord) {
+        // Keep the widget payload small and stable.
+        // The widget can derive day/target independently; we only persist the latest state.
+        let snapshot = WidgetSnapshot(
+            dayNumber: today.dayNumber,
+            target: today.target,
+            completed: today.completed,
+            remaining: today.remaining,
+            isComplete: today.isComplete,
+            mode: settings.mode == .strict ? "strict" : "flexible",
+            programStartDate: settings.programStartDate,
+            timestamp: Date()
+        )
+
+        WidgetDataStore.save(snapshot)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }
 
