@@ -338,7 +338,7 @@ struct WelcomeView: View {
                     .id("getStartedButton")
                     }
                     .onChange(of: focusedField) { _, newValue in
-                        if let field = newValue {
+                        if newValue != nil {
                             withAnimation {
                                 proxy.scrollTo("nameField", anchor: .center)
                             }
@@ -385,7 +385,7 @@ struct WelcomeView: View {
         Task {
             do {
                 // Get or create settings
-                var userSettings = try store.getOrCreateSettings(modelContext: modelContext)
+                let userSettings = try store.getOrCreateSettings(modelContext: modelContext)
                 
                 let calendar = Calendar.current
                 let today = calendar.startOfDay(for: Date())
@@ -628,3 +628,4 @@ struct BirthdayPickerSheet: View {
     WelcomeView(onComplete: {})
         .modelContainer(for: [UserSettings.self, DayRecord.self, LogEntry.self], inMemory: true)
 }
+

@@ -1,3 +1,4 @@
+#if false
 //
 //  WatchSyncService.swift
 //  Push365
@@ -74,3 +75,4 @@ final class WatchSyncService: ObservableObject {
         }
     }
 }
+#endif
