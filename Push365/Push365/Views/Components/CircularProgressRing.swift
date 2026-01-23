@@ -155,19 +155,15 @@ struct CircularProgressRing: View {
                 if isComplete {
                     if let firstName = firstName, !firstName.isEmpty {
                         Text("Done for today")
-                            .font(.system(size: 28, weight: .semibold, design: .rounded))
+                            .font(.system(size: 24, weight: .semibold, design: .rounded))
                             .foregroundStyle(Color.white.opacity(0.92))
                         Text(firstName)
-                            .font(.system(size: 28, weight: .medium, design: .rounded))
+                            .font(.system(size: 24, weight: .medium, design: .rounded))
                             .foregroundStyle(Color.white.opacity(0.92))
                     } else {
-                        Text("Done")
-                            .font(.system(size: 56, weight: .semibold, design: .rounded))
+                        Text("Done for today")
+                            .font(.system(size: 28, weight: .semibold, design: .rounded))
                             .foregroundStyle(Color.white.opacity(0.92))
-                        
-                        Text("for today")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(Color.white.opacity(0.45))
                     }
                 } else {
                     Text("\(target)")
