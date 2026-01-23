@@ -105,7 +105,8 @@ struct HomeView: View {
                                 progress: Double(today.completed) / Double(max(1, today.target)),
                                 completed: today.completed,
                                 target: today.target,
-                                isComplete: today.isComplete
+                                isComplete: today.isComplete,
+                                firstName: settings.firstName
                             )
                             .onChange(of: today.isComplete) { oldValue, newValue in
                                 if newValue && !wasComplete {

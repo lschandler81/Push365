@@ -13,6 +13,7 @@ struct CircularProgressRing: View {
     let completed: Int
     let target: Int
     let isComplete: Bool
+    let firstName: String?
 
     @State private var animatedProgress: Double = 0
 
@@ -152,13 +153,22 @@ struct CircularProgressRing: View {
             // Center content
             VStack(spacing: 4) {
                 if isComplete {
-                    Text("Done")
-                        .font(.system(size: 56, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color.white.opacity(0.92))
-                    
-                    Text("for today")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.45))
+                    if let firstName = firstName, !firstName.isEmpty {
+                        Text("Done for today,")
+                            .font(.system(size: 24, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Color.white.opacity(0.92))
+                        Text(firstName)
+                            .font(.system(size: 32, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Color.white.opacity(0.92))
+                    } else {
+                        Text("Done")
+                            .font(.system(size: 56, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Color.white.opacity(0.92))
+                        
+                        Text("for today")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Color.white.opacity(0.45))
+                    }
                 } else {
                     Text("\(target)")
                         .font(.system(size: 56, weight: .bold, design: .rounded))
@@ -186,9 +196,9 @@ struct CircularProgressRing: View {
     ZStack {
         Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255).ignoresSafeArea()
         VStack(spacing: 40) {
-            CircularProgressRing(progress: 0.3, completed: 6, target: 21, isComplete: false)
-            CircularProgressRing(progress: 0.75, completed: 16, target: 21, isComplete: false)
-            CircularProgressRing(progress: 1.0, completed: 21, target: 21, isComplete: true)
+            CircularProgressRing(progress: 0.3, completed: 6, target: 21, isComplete: false, firstName: nil)
+            CircularProgressRing(progress: 0.75, completed: 16, target: 21, isComplete: false, firstName: nil)
+            CircularProgressRing(progress: 1.0, completed: 21, target: 21, isComplete: true, firstName: "Alex")
         }
     }
 }
