@@ -13,6 +13,9 @@ final class NotificationManager {
     
     private let center = UNUserNotificationCenter.current()
     
+    // Identifier for the next morning notification
+    private let nextMorningIdentifier = "next-morning-reminder"
+    
     // MARK: - Permission
     
     /// Requests notification permission from the user
@@ -28,7 +31,93 @@ final class NotificationManager {
     
     // MARK: - Scheduling
     
-    /// Schedules notifications for a specific date
+    /// Schedules the next morning notification with correct day/target for tomorrow
+    /// Should be called on app launch and when settings change
+    /// - Parameters:
+    ///   - settings: User settings containing notification preferences and start date
+    func scheduleNextMorningNotification(settings: UserSettings) {
+        guard settings.notificationsEnabled else {
+            cancelMorningNotifications()
+            return
+        }
+        
+        // Cancel existing morning notification
+        cancelMorningNotifications()
+        
+        let calendar = Calendar.current
+        
+        // Calculate when the next morning notification should fire
+        var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: Date())
+        components.hour = settings.morningHour
+        components.minute = settings.morningMinute
+        
+        guard var scheduledDate = calendar.date(from: components) else { return }
+        
+        // If the time has already passed today, schedule for tomorrow
+        if scheduledDate <= Date() {
+            guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: scheduledDate) else { return }
+            scheduledDate = tomorrow
+        }
+        
+        // Calculate day number and target for the scheduled date
+        let dayNumber = DayCalculator.dayNumber(for: scheduledDate, startDate: settings.programStartDate, calendar: calendar)
+        let target = calculateTarget(for: scheduledDate, dayNumber: dayNumber, settings: settings, calendar: calendar)
+        
+        // Build notification content
+        let content = UNMutableNotificationContent()
+        content.title = "Day \(dayNumber)"
+        
+        if settings.mode == .strict {
+            // Strict mode: show specific target
+            content.body = "Your target today is \(target) push-ups."
+        } else {
+            // Flexible mode: generic message (or calculate target if needed)
+            content.body = "Your target today is \(target) push-ups."
+            if target != dayNumber {
+                content.body += " Flexible mode keeps your target steady until completed."
+            }
+        }
+        
+        content.sound = .default
+        
+        // Schedule for the specific date/time (non-repeating)
+        let triggerComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: scheduledDate)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: triggerComponents, repeats: false)
+        let request = UNNotificationRequest(identifier: nextMorningIdentifier, content: content, trigger: trigger)
+        
+        center.add(request) { error in
+            if let error = error {
+                print("Error scheduling morning notification: \(error)")
+            }
+        }
+    }
+    
+    /// Calculates the target for a given date in flexible mode
+    private func calculateTarget(for date: Date, dayNumber: Int, settings: UserSettings, calendar: Calendar) -> Int {
+        if settings.mode == .strict {
+            return DayCalculator.strictTarget(for: dayNumber)
+        }
+        
+        // Flexible mode logic
+        guard let lastCompletionDate = settings.lastCompletedDateKey else {
+            return max(1, dayNumber)
+        }
+        
+        let dateKey = DayCalculator.dateKey(for: date, calendar: calendar)
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: dateKey) ?? dateKey
+        let yesterdayKey = DayCalculator.dateKey(for: yesterday, calendar: calendar)
+        let lastCompletionKey = DayCalculator.dateKey(for: lastCompletionDate, calendar: calendar)
+        
+        let yesterdayWasCompleted = (lastCompletionKey == yesterdayKey)
+        
+        if yesterdayWasCompleted {
+            return max(1, dayNumber)
+        } else {
+            return max(1, settings.lastCompletedTarget + 1)
+        }
+    }
+    
+    /// Schedules notifications for a specific date (used for today's reminder)
     /// - Parameters:
     ///   - date: The date to schedule notifications for
     ///   - settings: User settings containing notification preferences
@@ -43,18 +132,24 @@ final class NotificationManager {
         // Cancel existing notifications for this date
         cancelNotifications(for: date)
         
-        // Schedule morning notification
-        scheduleMorningNotification(for: date, settings: settings, record: record)
-        
         // Schedule reminder only if remaining > 0
         if record.remaining > 0 {
             scheduleReminderNotification(for: date, settings: settings, record: record)
         }
+        
+        // Always reschedule next morning notification to ensure it's up to date
+        scheduleNextMorningNotification(settings: settings)
     }
     
     /// Cancels all scheduled notifications
     func cancelAllNotifications() {
         center.removeAllPendingNotificationRequests()
+    }
+    
+    /// Cancels morning notifications
+    func cancelMorningNotifications() {
+        center.removePendingNotificationRequests(withIdentifiers: [nextMorningIdentifier])
+        center.removeDeliveredNotifications(withIdentifiers: [nextMorningIdentifier])
     }
     
     /// Cancels only the reminder notification for a specific date
@@ -83,46 +178,6 @@ final class NotificationManager {
     }
     
     // MARK: - Private Helpers
-    
-    private func scheduleMorningNotification(for date: Date, settings: UserSettings, record: DayRecord) {
-        let content = UNMutableNotificationContent()
-        content.title = "Day \(record.dayNumber)"
-        
-        // Add context for flexible mode if target is held
-        var bodyText = "Your target today is \(record.target) push-ups."
-        if settings.mode == .flexible && record.target != record.dayNumber {
-            bodyText += " Flexible mode keeps your target steady until completed."
-        }
-        content.body = bodyText
-        content.sound = .default
-        
-        let calendar = Calendar.current
-        let identifier = makeIdentifier(type: "morning", date: date)
-        
-        // Build the notification time for today
-        var dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
-        dateComponents.hour = settings.morningHour
-        dateComponents.minute = settings.morningMinute
-        
-        // Check if this time has already passed today
-        if let scheduledDate = calendar.date(from: dateComponents), scheduledDate <= Date() {
-            // Time has passed, schedule for tomorrow instead
-            if let tomorrow = calendar.date(byAdding: .day, value: 1, to: date) {
-                dateComponents = calendar.dateComponents([.year, .month, .day], from: tomorrow)
-                dateComponents.hour = settings.morningHour
-                dateComponents.minute = settings.morningMinute
-            }
-        }
-        
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-        
-        center.add(request) { error in
-            if let error = error {
-                print("Error scheduling morning notification: \(error)")
-            }
-        }
-    }
     
     private func scheduleReminderNotification(for date: Date, settings: UserSettings, record: DayRecord) {
         let content = UNMutableNotificationContent()
