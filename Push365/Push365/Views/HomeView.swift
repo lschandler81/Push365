@@ -19,6 +19,7 @@ struct HomeView: View {
     @State private var customAmountText = ""
     @State private var wasComplete = false
     @State private var showingModeInfo = false
+    @State private var showingProtocolDayConfirmation = false
     
     // Services
     private let store = ProgressStore()
@@ -224,7 +225,7 @@ struct HomeView: View {
                         // Protocol Day button (only when target not met and has protocols remaining)
                         if !today.isComplete, let settings = settings, settings.protocolDaysUsed < settings.protocolDayLimit {
                             Button {
-                                completeProtocolDay()
+                                showingProtocolDayConfirmation = true
                             } label: {
                                 HStack(spacing: 8) {
                                     Image(systemName: "shield.fill")
@@ -248,8 +249,8 @@ struct HomeView: View {
                             }
                         }
                         
-                        // Undo button (always present; disabled when there is nothing to undo)
-                        let canUndo = !today.logs.isEmpty
+                        // Undo button (always present; disabled when there is nothing to undo or day is complete)
+                        let canUndo = !today.logs.isEmpty && !today.isComplete
                         
                         Button {
                             guard canUndo else { return }
@@ -307,6 +308,20 @@ struct HomeView: View {
             .sheet(isPresented: $showingModeInfo) {
                 if let settings = settings {
                     ModeInfoSheet(mode: settings.mode)
+                }
+            }
+            .sheet(isPresented: $showingProtocolDayConfirmation) {
+                if let settings = settings {
+                    ProtocolDayConfirmationSheet(
+                        remaining: settings.protocolDayLimit - settings.protocolDaysUsed,
+                        onConfirm: {
+                            showingProtocolDayConfirmation = false
+                            completeProtocolDay()
+                        },
+                        onCancel: {
+                            showingProtocolDayConfirmation = false
+                        }
+                    )
                 }
             }
         }
@@ -717,6 +732,138 @@ struct ModeInfoSheet: View {
         }
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
+    }
+}
+
+struct ProtocolDayConfirmationSheet: View {
+    let remaining: Int
+    let onConfirm: () -> Void
+    let onCancel: () -> Void
+    
+    var body: some View {
+        ZStack {
+            DSColor.background.ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Button(action: onCancel) {
+                        Text("Cancel")
+                            .font(DSFont.button)
+                            .foregroundStyle(DSColor.textSecondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Text("Protocol Day")
+                        .font(DSFont.button)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(DSColor.textPrimary)
+                    
+                    Spacer()
+                    
+                    Text("Cancel")
+                        .font(DSFont.button)
+                        .foregroundStyle(.clear)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                .background(DSColor.surface)
+                
+                Divider()
+                    .background(DSColor.textSecondary.opacity(0.2))
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        Spacer()
+                            .frame(height: 24)
+                        
+                        // Warning icon
+                        Image(systemName: "shield.fill")
+                            .font(.system(size: 48))
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                        
+                        // Message
+                        VStack(spacing: 16) {
+                            Text("Use a Protocol Day?")
+                                .font(.system(size: 22, weight: .semibold))
+                                .foregroundStyle(DSColor.textPrimary)
+                                .multilineTextAlignment(.center)
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("This will:")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(DSColor.textSecondary)
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("•")
+                                        Text("Mark today as complete")
+                                    }
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("•")
+                                        Text("Preserve your streak")
+                                    }
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("•")
+                                        Text("Not increase tomorrow's target")
+                                    }
+                                }
+                                .font(.system(size: 15))
+                                .foregroundStyle(DSColor.textPrimary.opacity(0.85))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(DSColor.surface.opacity(0.5))
+                            )
+                            
+                            VStack(spacing: 8) {
+                                Text("\(remaining) Protocol \(remaining == 1 ? "Day" : "Days") remaining")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(DSColor.textSecondary)
+                                
+                                Text("This action cannot be undone.")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        Spacer()
+                    }
+                }
+                
+                // Buttons
+                VStack(spacing: 12) {
+                    Button {
+                        onConfirm()
+                    } label: {
+                        Text("Use Protocol Day")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(DSColor.surface.opacity(0.8))
+                            )
+                    }
+                    
+                    Button {
+                        onCancel()
+                    } label: {
+                        Text("Cancel")
+                            .font(.system(size: 15))
+                            .foregroundStyle(DSColor.textSecondary)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 20)
+                .background(DSColor.background)
+            }
+        }
     }
 }
 

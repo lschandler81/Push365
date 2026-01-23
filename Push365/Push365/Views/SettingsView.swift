@@ -394,6 +394,10 @@ struct SettingsView: View {
             settings.lastStreakEvaluatedDateKey = nil
             settings.lastCompletedTarget = 0
             settings.modeRaw = "flexible"
+            
+            // Reset Protocol Days
+            settings.protocolDaysUsed = 0
+            settings.protocolDayLimit = 5
         }
         
         try? modelContext.save()
