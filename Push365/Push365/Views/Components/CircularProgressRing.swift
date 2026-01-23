@@ -151,14 +151,14 @@ struct CircularProgressRing: View {
             .animation(.spring(response: 0.6, dampingFraction: 0.7), value: p)
 
             // Center content
-            VStack(spacing: 4) {
+            VStack(spacing: 6) {
                 if isComplete {
                     if let firstName = firstName, !firstName.isEmpty {
-                        Text("Done for today,")
-                            .font(.system(size: 24, weight: .semibold, design: .rounded))
+                        Text("Done for today")
+                            .font(.system(size: 28, weight: .semibold, design: .rounded))
                             .foregroundStyle(Color.white.opacity(0.92))
                         Text(firstName)
-                            .font(.system(size: 32, weight: .semibold, design: .rounded))
+                            .font(.system(size: 28, weight: .medium, design: .rounded))
                             .foregroundStyle(Color.white.opacity(0.92))
                     } else {
                         Text("Done")
