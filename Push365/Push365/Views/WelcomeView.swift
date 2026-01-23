@@ -274,7 +274,6 @@ struct WelcomeView: View {
                                 )
                                 .autocorrectionDisabled()
                                 .focused($focusedField, equals: .name)
-                                .submitLabel(.done)
                                 .onSubmit {
                                     focusedField = nil
                                 }
