@@ -10,45 +10,103 @@ import SwiftData
 
 @main
 struct Push365App: App {
-    let modelContainer: ModelContainer
+    @State private var modelContainer: ModelContainer?
+    @State private var initError: Error?
     
     init() {
+        _modelContainer = State(initialValue: Self.createModelContainer())
+        if _modelContainer.wrappedValue == nil {
+            // Error occurred - will be shown in UI
+        }
+    }
+    
+    static func createModelContainer() -> ModelContainer? {
         let schema = Schema([
             UserSettings.self,
             DayRecord.self,
             LogEntry.self
         ])
 
-        // Standard on-device SwiftData store (no App Groups).
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
-            modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            // If migration fails, avoid silently wiping user data in production.
             print("ModelContainer initialization failed: \(error)")
 
             #if DEBUG
             // In DEBUG only, recreate the container so development can continue.
             print("DEBUG: Recreating the SwiftData store.")
             do {
-                modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+                return try ModelContainer(for: schema, configurations: [modelConfiguration])
             } catch {
-                fatalError("Failed to initialize ModelContainer in DEBUG after retry: \(error)")
+                print("DEBUG: Failed to initialize ModelContainer after retry: \(error)")
+                return nil
             }
             #else
-            // In release builds, fail loudly so we don't destroy a real user's data.
-            fatalError("Failed to initialize ModelContainer: \(error)")
+            // In release builds, return nil to show error UI
+            return nil
             #endif
         }
     }
     
     var body: some Scene {
         WindowGroup {
-            RootView()
+            if let container = modelContainer {
+                RootView()
+                    .preferredColorScheme(.dark)
+                    .modelContainer(container)
+            } else {
+                DataLoadErrorView(onRetry: {
+                    modelContainer = Self.createModelContainer()
+                })
                 .preferredColorScheme(.dark)
+            }
         }
-        .modelContainer(modelContainer)
+    }
+}
+
+struct DataLoadErrorView: View {
+    let onRetry: () -> Void
+    
+    var body: some View {
+        ZStack {
+            // Dark background matching app theme
+            Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 24) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 60))
+                    .foregroundStyle(.orange.opacity(0.8))
+                
+                VStack(spacing: 12) {
+                    Text("Unable to Load Data")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.92))
+                    
+                    Text("We couldn't initialize the app's storage. This may be due to a corrupted database or insufficient storage space.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.white.opacity(0.65))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+                
+                Button(action: onRetry) {
+                    Text("Try Again")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(red: 0x4D/255, green: 0xA3/255, blue: 0xFF/255))
+                        )
+                }
+                .padding(.horizontal, 48)
+                .padding(.top, 12)
+            }
+        }
     }
 }
 
