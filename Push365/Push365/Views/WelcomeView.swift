@@ -12,7 +12,7 @@ struct WelcomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settings: [UserSettings]
     
-    @State private var displayName: String = ""
+    @State private var firstName: String = ""
     @State private var dateOfBirth: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @State private var selectedMode: ProgressMode = .flexible
     @State private var showBirthdayPicker: Bool = false
@@ -258,13 +258,13 @@ struct WelcomeView: View {
                             .textCase(.uppercase)
                             .tracking(1)
                         
-                        // Name field
+                        // First name field
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Name (optional)")
+                            Text("First name (optional)")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundStyle(DSColor.textSecondary)
                             
-                            TextField("Your name", text: $displayName)
+                            TextField("Your first name", text: $firstName)
                                 .font(.system(size: 17))
                                 .foregroundStyle(DSColor.textPrimary)
                                 .padding(12)
@@ -279,6 +279,10 @@ struct WelcomeView: View {
                                     focusedField = nil
                                 }
                                 .id("nameField")
+                            
+                            Text("Used for friendly reminders")
+                                .font(.system(size: 13))
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.6))
                         }
                         
                         // Birthday field
@@ -395,8 +399,15 @@ struct WelcomeView: View {
                 userSettings.programStartDate = selectedStartDate
                 userSettings.trackingStartDate = today
                 
-                // Save onboarding data
-                userSettings.displayName = displayName.isEmpty ? nil : displayName
+                // Trim and save firstName
+                let trimmedFirstName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
+                userSettings.firstName = trimmedFirstName.isEmpty ? nil : trimmedFirstName
+                
+                // Migrate old displayName to firstName if needed
+                if userSettings.firstName == nil && userSettings.displayName != nil {
+                    userSettings.firstName = userSettings.displayName
+                }
+                
                 userSettings.dateOfBirth = hasBirthday ? dateOfBirth : nil
                 userSettings.mode = selectedMode
                 userSettings.hasCompletedOnboarding = true

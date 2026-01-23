@@ -85,7 +85,8 @@ final class UserSettings {
     var hasCompletedOnboarding: Bool
     
     // User profile (optional)
-    var displayName: String?
+    var firstName: String?
+    var displayName: String? // Deprecated - migrated to firstName
     var dateOfBirth: Date?
     
     // MARK: - Computed Properties
@@ -157,6 +158,7 @@ final class UserSettings {
         lastStreakEvaluatedDateKey: Date? = nil,
         lastCompletedTarget: Int = 0,
         hasCompletedOnboarding: Bool = false,
+        firstName: String? = nil,
         displayName: String? = nil,
         dateOfBirth: Date? = nil
     ) {
@@ -178,7 +180,13 @@ final class UserSettings {
         self.lastStreakEvaluatedDateKey = lastStreakEvaluatedDateKey
         self.lastCompletedTarget = lastCompletedTarget
         self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.firstName = firstName
         self.displayName = displayName
         self.dateOfBirth = dateOfBirth
+        
+        // Migrate displayName to firstName if needed
+        if self.firstName == nil && displayName != nil {
+            self.firstName = displayName
+        }
     }
 }

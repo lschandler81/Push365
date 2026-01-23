@@ -153,7 +153,6 @@ struct HistoryView: View {
     
     // MARK: - Month Navigation
     
-    @ViewBuilder
     private func monthNavigationControls() -> some View {
         guard let userSettings = settings.first else { return AnyView(EmptyView()) }
         

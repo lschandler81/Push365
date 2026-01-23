@@ -24,7 +24,6 @@ struct HomeView: View {
     private let store = ProgressStore()
     private let motivation = MotivationService()
     private let notificationManager = NotificationManager()
-    private let watchSync = WatchSyncService()
     
     var body: some View {
         NavigationStack {
@@ -325,11 +324,6 @@ struct HomeView: View {
             // Schedule today's notifications
             if let settings = settings, let today = today {
                 notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
-            }
-            
-            // Initialize watch sync
-            watchSync.start(modelContext: modelContext)
-            await watchSync.pushCurrentState(modelContext: modelContext)
             }
         } catch {
             errorMessage = "Error loading data: \(error.localizedDescription)"
