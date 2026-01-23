@@ -419,9 +419,19 @@ struct WelcomeView: View {
                         return
                     }
                     
+                    // Calculate and cap backfill range
+                    let daysBetween = calendar.dateComponents([.day], from: selectedStartDate, to: yesterday).day ?? 0
+                    let maxBackfillDays = 365
+                    
+                    if daysBetween > maxBackfillDays {
+                        errorMessage = "Backfill is limited to \(maxBackfillDays) days. Please choose a more recent start date."
+                        isSubmitting = false
+                        return
+                    }
+                    
                     // Create DayRecords for each day from start date to yesterday
                     var currentDate = selectedStartDate
-                    var backfilledCount = 0
+                    var lastBackfilledDate: Date?
                     
                     while currentDate <= yesterday {
                         let dayNum = DayCalculator.dayNumber(for: currentDate, startDate: selectedStartDate)
@@ -437,20 +447,22 @@ struct WelcomeView: View {
                         
                         modelContext.insert(record)
                         
-                        backfilledCount += 1
+                        // Update streak using StreakCalculator for consistency
+                        StreakCalculator.recordCompletion(for: currentDate, settings: &userSettings, calendar: calendar)
+                        
+                        // Track actual last backfilled date
+                        lastBackfilledDate = currentDate
+                        
                         guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
                             break
                         }
                         currentDate = nextDate
                     }
                     
-                    // Update streak tracking
-                    if backfilledCount > 0 {
-                        userSettings.currentStreak = backfilledCount
-                        userSettings.longestStreak = backfilledCount
-                        userSettings.lastCompletedDateKey = yesterday
-                        let yesterdayNum = DayCalculator.dayNumber(for: yesterday, startDate: selectedStartDate)
-                        userSettings.lastCompletedTarget = max(1, yesterdayNum)
+                    // Update lastCompletedTarget based on actual last backfilled date
+                    if let lastDate = lastBackfilledDate {
+                        let lastDayNum = DayCalculator.dayNumber(for: lastDate, startDate: selectedStartDate)
+                        userSettings.lastCompletedTarget = max(1, lastDayNum)
                     }
                 }
                 
