@@ -15,6 +15,7 @@ struct SettingsView: View {
     
     @State private var showingResetConfirmation = false
     @State private var resetConfirmationText = ""
+    @State private var showRules = false
     
     private let progressStore = ProgressStore()
     private let notificationManager = NotificationManager()
@@ -224,6 +225,43 @@ struct SettingsView: View {
                         )
                         .padding(.horizontal, 20)
                         
+                        // About Card
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("About")
+                                .font(DSFont.sectionHeader)
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .textCase(.uppercase)
+                                .tracking(1)
+                            
+                            Button {
+                                showRules = true
+                            } label: {
+                                HStack {
+                                    Image(systemName: "book.pages")
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(DSColor.accent)
+                                        .frame(width: 28)
+                                    
+                                    Text("View the Rules")
+                                        .font(DSFont.button)
+                                        .foregroundStyle(DSColor.textPrimary)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.5))
+                                }
+                                .padding(.vertical, 4)
+                            }
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: DSRadius.card)
+                                .fill(DSColor.surface)
+                        )
+                        .padding(.horizontal, 20)
+                        
                         // Reset Section (Danger Zone)
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Reset")
@@ -266,6 +304,9 @@ struct SettingsView: View {
                 .background(DSColor.background.ignoresSafeArea())
                 .navigationTitle("Settings")
                 .toolbarColorScheme(.dark, for: .navigationBar)
+                .sheet(isPresented: $showRules) {
+                    RulesView()
+                }
                 .sheet(isPresented: $showingResetConfirmation) {
                     ResetConfirmationSheet(
                         confirmationText: $resetConfirmationText,

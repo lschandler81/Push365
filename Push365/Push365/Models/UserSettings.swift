@@ -81,6 +81,10 @@ final class UserSettings {
     // Flexible mode tracking
     var lastCompletedTarget: Int
     
+    // Protocol Days (limited emergency continuity option)
+    var protocolDaysUsed: Int
+    var protocolDayLimit: Int
+    
     // Onboarding
     var hasCompletedOnboarding: Bool
     
@@ -157,6 +161,8 @@ final class UserSettings {
         lastCompletedDateKey: Date? = nil,
         lastStreakEvaluatedDateKey: Date? = nil,
         lastCompletedTarget: Int = 0,
+        protocolDaysUsed: Int = 0,
+        protocolDayLimit: Int = 5,
         hasCompletedOnboarding: Bool = false,
         firstName: String? = nil,
         displayName: String? = nil,
@@ -179,6 +185,8 @@ final class UserSettings {
         self.lastCompletedDateKey = lastCompletedDateKey
         self.lastStreakEvaluatedDateKey = lastStreakEvaluatedDateKey
         self.lastCompletedTarget = lastCompletedTarget
+        self.protocolDaysUsed = protocolDaysUsed
+        self.protocolDayLimit = protocolDayLimit
         self.hasCompletedOnboarding = hasCompletedOnboarding
         self.firstName = firstName
         self.displayName = displayName

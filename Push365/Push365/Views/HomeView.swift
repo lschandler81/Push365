@@ -58,18 +58,12 @@ struct HomeView: View {
                             Spacer()
                                 .frame(height: adaptiveSpacing(for: geometry, base: 20))
                             
-                            // Day number and date - the hero alongside ring
-                            VStack(spacing: 8) {
-                                Text("Day \(today.dayNumber)")
-                                    .font(DSFont.dayTitle)
-                                    .foregroundStyle(DSColor.textPrimary)
-                                
-                                Text(DateDisplayFormatter.headerString(for: Date(), preference: settings.dateFormatPreference))
-                                    .font(.subheadline)
-                                    .foregroundStyle(DSColor.textSecondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, adaptiveTopPadding(for: geometry))
+                            // Day number - the hero alongside ring
+                            Text("Day \(today.dayNumber)")
+                                .font(DSFont.dayTitle)
+                                .foregroundStyle(DSColor.textPrimary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, adaptiveTopPadding(for: geometry))
                             
                             Spacer()
                                 .frame(height: adaptiveSpacing(for: geometry, base: 12))
@@ -105,6 +99,7 @@ struct HomeView: View {
                                 progress: Double(today.completed) / Double(max(1, today.target)),
                                 completed: today.completed,
                                 target: today.target,
+                                remaining: today.remaining,
                                 isComplete: today.isComplete,
                                 firstName: settings.firstName
                             )
@@ -125,26 +120,22 @@ struct HomeView: View {
                             Spacer()
                                 .frame(height: adaptiveSpacing(for: geometry, base: 28))
                             
-                            // Remaining stat (only if not complete)
-                            if !today.isComplete {
-                                VStack(spacing: 4) {
-                                    Text("\(today.remaining)")
-                                        .font(.system(size: 28, weight: .semibold, design: .rounded))
-                                        .monospacedDigit()
-                                        .foregroundStyle(DSColor.textPrimary.opacity(0.85))
-                                    Text("Remaining")
-                                        .font(.system(size: 11, weight: .medium))
-                                        .foregroundStyle(DSColor.textSecondary.opacity(0.6))
-                                        .textCase(.uppercase)
-                                        .tracking(0.8)
-                                }
-                                
-                                Spacer()
-                                    .frame(height: adaptiveSpacing(for: geometry, base: 16))
-                            }
-                            
                             // Streak indicator (prominent when complete, hidden when not complete)
                             if today.isComplete {
+                                // Check for milestone acknowledgement
+                                let milestoneText = getMilestoneText(dayNumber: today.dayNumber)
+                                
+                                if let milestone = milestoneText {
+                                    Text(milestone)
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal, 32)
+                                    
+                                    Spacer()
+                                        .frame(height: adaptiveSpacing(for: geometry, base: 12))
+                                }
+                                
                                 HStack(spacing: 6) {
                                     Text("Streak: \(settings.currentStreak)")
                                         .font(.system(size: 17, weight: .semibold))
@@ -229,6 +220,33 @@ struct HomeView: View {
                             )
                         }
                         .disabled(today.isComplete)
+                        
+                        // Protocol Day button (only when target not met and has protocols remaining)
+                        if !today.isComplete, let settings = settings, settings.protocolDaysUsed < settings.protocolDayLimit {
+                            Button {
+                                completeProtocolDay()
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "shield.fill")
+                                        .font(.system(size: 13))
+                                    VStack(spacing: 2) {
+                                        Text("Protocol Day")
+                                            .font(.system(size: 14, weight: .semibold))
+                                        Text("\(settings.protocolDayLimit - settings.protocolDaysUsed) remaining")
+                                            .font(.system(size: 11))
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(DSColor.surface.opacity(0.4))
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                                .cornerRadius(DSRadius.button)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: DSRadius.button)
+                                        .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
+                                )
+                            }
+                        }
                         
                         // Undo button (always present; disabled when there is nothing to undo)
                         let canUndo = !today.logs.isEmpty
@@ -376,6 +394,58 @@ struct HomeView: View {
             }
         } catch {
             errorMessage = "Error undoing: \(error.localizedDescription)"
+        }
+    }
+    
+    private func completeProtocolDay() {
+        guard let settings = settings, let today = today else { return }
+        guard settings.protocolDaysUsed < settings.protocolDayLimit else { return }
+        guard !today.isComplete else { return }
+        
+        do {
+            // Mark day as complete via Protocol Day
+            today.isProtocolDay = true
+            today.completed = today.target
+            
+            // Increment protocol days used
+            settings.protocolDaysUsed += 1
+            
+            // Update streak (preserves continuity, doesn't advance target)
+            var updatedSettings = settings
+            let calendar = Calendar.current
+            StreakCalculator.recordCompletion(for: Date(), settings: &updatedSettings, calendar: calendar)
+            
+            // Save changes
+            try modelContext.save()
+            
+            // Refresh
+            self.settings = settings
+            self.today = today
+            
+            // Haptic feedback
+            HapticManager.mediumImpact()
+            
+            // Cancel notifications for today
+            notificationManager.cancelTodaysNotifications()
+            
+            errorMessage = nil
+        } catch {
+            errorMessage = "Error completing protocol day: \(error.localizedDescription)"
+        }
+    }
+    
+    private func getMilestoneText(dayNumber: Int) -> String? {
+        switch dayNumber {
+        case 30:
+            return "30 days. You showed up."
+        case 50:
+            return "50 days. You kept going."
+        case 100:
+            return "100 days. Consistency compounds."
+        case 365:
+            return "365 days. The rule became routine."
+        default:
+            return nil
         }
     }
 }

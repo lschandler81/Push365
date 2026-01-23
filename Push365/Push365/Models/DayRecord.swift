@@ -24,6 +24,9 @@ final class DayRecord {
     /// Total completed push-ups
     var completed: Int
     
+    /// Whether this day was completed as a Protocol Day
+    var isProtocolDay: Bool
+    
     /// Log entries for this day
     @Relationship(deleteRule: .cascade, inverse: \LogEntry.dayRecord)
     var logs: [LogEntry]
@@ -48,6 +51,7 @@ final class DayRecord {
         dayNumber: Int,
         target: Int,
         completed: Int = 0,
+        isProtocolDay: Bool = false,
         logs: [LogEntry] = []
     ) {
         self.id = id
@@ -55,6 +59,7 @@ final class DayRecord {
         self.dayNumber = dayNumber
         self.target = target
         self.completed = completed
+        self.isProtocolDay = isProtocolDay
         self.logs = logs
     }
 }

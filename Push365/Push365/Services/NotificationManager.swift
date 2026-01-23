@@ -220,6 +220,10 @@ final class NotificationManager {
         center.removeDeliveredNotifications(withIdentifiers: [morningId, reminderId])
     }
     
+    func cancelTodaysNotifications() {
+        cancelNotifications(for: Date())
+    }
+    
     private func makeIdentifier(type: String, date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"

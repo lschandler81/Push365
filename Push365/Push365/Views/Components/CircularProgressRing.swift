@@ -12,6 +12,7 @@ struct CircularProgressRing: View {
     let progress: Double
     let completed: Int
     let target: Int
+    let remaining: Int
     let isComplete: Bool
     let firstName: String?
 
@@ -169,7 +170,7 @@ struct CircularProgressRing: View {
                             .foregroundStyle(Color.white.opacity(0.92))
                     }
                 } else {
-                    Text("\(target)")
+                    Text("\(completed > 0 ? completed : target)")
                         .font(.system(size: 56, weight: .bold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(Color.white.opacity(0.92))
@@ -195,9 +196,9 @@ struct CircularProgressRing: View {
     ZStack {
         Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255).ignoresSafeArea()
         VStack(spacing: 40) {
-            CircularProgressRing(progress: 0.3, completed: 6, target: 21, isComplete: false, firstName: nil)
-            CircularProgressRing(progress: 0.75, completed: 16, target: 21, isComplete: false, firstName: nil)
-            CircularProgressRing(progress: 1.0, completed: 21, target: 21, isComplete: true, firstName: "Alex")
+            CircularProgressRing(progress: 0.3, completed: 6, target: 21, remaining: 15, isComplete: false, firstName: nil)
+            CircularProgressRing(progress: 0.75, completed: 16, target: 21, remaining: 5, isComplete: false, firstName: nil)
+            CircularProgressRing(progress: 1.0, completed: 21, target: 21, remaining: 0, isComplete: true, firstName: "Alex")
         }
     }
 }

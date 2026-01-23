@@ -22,6 +22,7 @@ struct WelcomeView: View {
     @State private var startDate: Date = Date()
     @State private var enableBackfill: Bool = false
     @State private var showModeInfo: Bool = false
+    @State private var showRules: Bool = false
     @State private var isSubmitting: Bool = false
     @State private var errorMessage: String?
     
@@ -79,6 +80,16 @@ struct WelcomeView: View {
                             .font(.system(size: 17))
                             .foregroundStyle(DSColor.textSecondary)
                             .multilineTextAlignment(.center)
+                        
+                        // View Rules button
+                        Button {
+                            showRules = true
+                        } label: {
+                            Text("View the Rules")
+                                .font(.system(size: 15))
+                                .foregroundStyle(DSColor.accent)
+                        }
+                        .padding(.top, 4)
                     }
                     .padding(.top, 60)
                     
@@ -363,6 +374,9 @@ struct WelcomeView: View {
         .sheet(isPresented: $showModeInfo) {
             ModeExplanationSheet()
         }
+        .sheet(isPresented: $showRules) {
+            RulesView()
+        }
         .sheet(isPresented: $showBirthdayPicker) {
             BirthdayPickerSheet(
                 dateOfBirth: $tempDateOfBirth,
@@ -388,7 +402,7 @@ struct WelcomeView: View {
         Task {
             do {
                 // Get or create settings
-                let userSettings = try store.getOrCreateSettings(modelContext: modelContext)
+                var userSettings = try store.getOrCreateSettings(modelContext: modelContext)
                 
                 let calendar = Calendar.current
                 let today = calendar.startOfDay(for: Date())

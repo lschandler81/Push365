@@ -34,19 +34,25 @@ struct Push365App: App {
         } catch {
             print("ModelContainer initialization failed: \(error)")
 
-            #if DEBUG
-            // In DEBUG only, recreate the container so development can continue.
-            print("DEBUG: Recreating the SwiftData store.")
+            // Schema migration issue - delete and recreate store
+            print("Attempting to reset data store due to schema migration...")
+            
+            // Get the default store URL
+            let storeURL = modelConfiguration.url
             do {
+                // Remove the existing store files
+                let fileManager = FileManager.default
+                if fileManager.fileExists(atPath: storeURL.path) {
+                    try fileManager.removeItem(at: storeURL)
+                    print("Removed old data store at: \(storeURL.path)")
+                }
+                
+                // Try creating container again with fresh store
                 return try ModelContainer(for: schema, configurations: [modelConfiguration])
             } catch {
-                print("DEBUG: Failed to initialize ModelContainer after retry: \(error)")
+                print("Failed to reset and recreate store: \(error)")
                 return nil
             }
-            #else
-            // In release builds, return nil to show error UI
-            return nil
-            #endif
         }
     }
     
