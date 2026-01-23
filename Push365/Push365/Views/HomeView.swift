@@ -24,7 +24,7 @@ struct HomeView: View {
     private let store = ProgressStore()
     private let motivation = MotivationService()
     private let notificationManager = NotificationManager()
-    private let watchSync = WatchSyncService()
+
     
     var body: some View {
         NavigationStack {
@@ -326,11 +326,6 @@ struct HomeView: View {
             if let settings = settings, let today = today {
                 notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
             }
-            
-            // Initialize watch sync
-            watchSync.start(modelContext: modelContext)
-            await watchSync.pushCurrentState(modelContext: modelContext)
-            }
         } catch {
             errorMessage = "Error loading data: \(error.localizedDescription)"
         }
@@ -360,11 +355,6 @@ struct HomeView: View {
             if let settings = settings, let today = today {
                 notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
             }
-            
-            // Push state to watch
-            Task {
-                await watchSync.pushCurrentState(modelContext: modelContext)
-            }
         } catch {
             errorMessage = "Error logging: \(error.localizedDescription)"
         }
@@ -383,11 +373,6 @@ struct HomeView: View {
             // Reschedule notifications with updated remaining count
             if let settings = settings, let today = today {
                 notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
-            }
-            
-            // Push state to watch
-            Task {
-                await watchSync.pushCurrentState(modelContext: modelContext)
             }
         } catch {
             errorMessage = "Error undoing: \(error.localizedDescription)"
@@ -671,3 +656,4 @@ struct ModeInfoSheet: View {
     HomeView()
         .modelContainer(for: [UserSettings.self, DayRecord.self, LogEntry.self], inMemory: true)
 }
+

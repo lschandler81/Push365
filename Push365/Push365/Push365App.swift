@@ -18,17 +18,10 @@ struct Push365App: App {
             DayRecord.self,
             LogEntry.self
         ])
-        
-        // Use shared App Group container
-        guard let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.com.lschandler81.Push365"
-        ) else {
-            fatalError("Failed to get App Group container URL. Ensure App Group capability is configured.")
-        }
-        
-        let storeURL = containerURL.appendingPathComponent("Push365.store")
-        let modelConfiguration = ModelConfiguration(url: storeURL)
-        
+
+        // Standard on-device SwiftData store (no App Groups).
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
         do {
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
@@ -36,16 +29,12 @@ struct Push365App: App {
             print("ModelContainer initialization failed: \(error)")
 
             #if DEBUG
-            print("DEBUG: Attempting to delete and recreate the SwiftData store.")
-
-            try? FileManager.default.removeItem(at: storeURL)
-            try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
-            try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
-
+            // In DEBUG only, recreate the container so development can continue.
+            print("DEBUG: Recreating the SwiftData store.")
             do {
                 modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
             } catch {
-                fatalError("Failed to initialize ModelContainer after cleanup: \(error)")
+                fatalError("Failed to initialize ModelContainer in DEBUG after retry: \(error)")
             }
             #else
             // In release builds, fail loudly so we don't destroy a real user's data.

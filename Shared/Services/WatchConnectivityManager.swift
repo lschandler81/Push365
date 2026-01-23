@@ -18,6 +18,7 @@ final class PhoneConnectivityManager: NSObject, ObservableObject {
     
     private let session: WCSession
     private var actionHandler: ((WatchAction) async -> Void)?
+    private var stateProvider: (() async -> WatchDayState?)?
     
     private override init() {
         self.session = WCSession.default
@@ -30,6 +31,10 @@ final class PhoneConnectivityManager: NSObject, ObservableObject {
     
     func setActionHandler(_ handler: @escaping (WatchAction) async -> Void) {
         self.actionHandler = handler
+    }
+    
+    func setStateProvider(_ provider: @escaping () async -> WatchDayState?) {
+        self.stateProvider = provider
     }
     
     /// Send current day state to watch
@@ -69,6 +74,17 @@ extension PhoneConnectivityManager: WCSessionDelegate {
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
         Task { @MainActor in
+            // Check if this is an initial state request
+            if message["request"] as? String == "initialState" {
+                if let state = await stateProvider?() {
+                    replyHandler(state.toDictionary())
+                } else {
+                    replyHandler(["error": "No state available"])
+                }
+                return
+            }
+            
+            // Otherwise, handle as action
             guard let action = WatchAction.from(message) else {
                 replyHandler(["error": "Invalid action"])
                 return

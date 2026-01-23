@@ -2,50 +2,63 @@
 //  WatchSyncService.swift
 //  Push365
 //
-//  Created by Lee Chandler on 22/01/2026.
+//  Bridges WatchConnectivity ↔ SwiftData (phone is source of truth)
 //
 
-import SwiftUI
+import Foundation
+import Combine
 import SwiftData
 
-/// Service to integrate WatchConnectivity with SwiftData on phone
 @MainActor
 final class WatchSyncService: ObservableObject {
+
     private let store = ProgressStore()
     private let connectivity = PhoneConnectivityManager.shared
-    
+    private var isStarted = false
+
     func start(modelContext: ModelContext) {
-        // Set up action handler
+        guard !isStarted else { return }
+        isStarted = true
+
         connectivity.setActionHandler { [weak self] action in
-            await self?.handleWatchAction(action, modelContext: modelContext)
+            guard let self else { return }
+            await self.handleWatchAction(action, modelContext: modelContext)
+        }
+        
+        connectivity.setStateProvider { [weak self] () async -> WatchDayState? in
+            guard let self else { return nil }
+            return await self.getCurrentState(modelContext: modelContext)
         }
     }
-    
-    /// Handle action from watch and push back authoritative state
+
     private func handleWatchAction(_ action: WatchAction, modelContext: ModelContext) async {
         do {
             switch action {
             case .logPushups(let amount, _):
                 try store.addLog(amount: amount, date: Date(), modelContext: modelContext)
-                
+
             case .undoLastLog:
                 try store.undoLastLog(date: Date(), modelContext: modelContext)
             }
-            
-            // Push back authoritative state
+
             await pushCurrentState(modelContext: modelContext)
-            
+
         } catch {
-            print("[WatchSync] Failed to handle action: \(error)")
+            print("[WatchSyncService] Failed to handle action \(action): \(error)")
+        }
+    }
+
+    func pushCurrentState(modelContext: ModelContext) async {
+        if let state = await getCurrentState(modelContext: modelContext) {
+            connectivity.sendDayState(state)
         }
     }
     
-    /// Push current day state to watch
-    func pushCurrentState(modelContext: ModelContext) async {
+    private func getCurrentState(modelContext: ModelContext) async -> WatchDayState? {
         do {
             let today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
-            
-            let state = WatchDayState(
+
+            return WatchDayState(
                 dayNumber: today.dayNumber,
                 target: today.target,
                 completed: today.completed,
@@ -54,11 +67,10 @@ final class WatchSyncService: ObservableObject {
                 canUndo: !today.logs.isEmpty,
                 timestamp: Date()
             )
-            
-            connectivity.sendDayState(state)
-            
+
         } catch {
-            print("[WatchSync] Failed to push state: \(error)")
+            print("[WatchSyncService] Failed to get current state: \(error)")
+            return nil
         }
     }
 }

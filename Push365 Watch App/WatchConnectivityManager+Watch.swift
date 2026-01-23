@@ -47,7 +47,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         guard let currentState = dayState, !currentState.isComplete else { return }
         
         // Create action
-        let action = WatchAction.logPushups(amount: amount, timestamp: Date())
+        let action = WatchAction.logPushups(amount: amount, clientTimestamp: Date())
         pendingActions.append(action)
         
         // Optimistic update
@@ -76,7 +76,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         guard let currentState = dayState, currentState.canUndo else { return }
         
         // Create action
-        let action = WatchAction.undoLastLog(timestamp: Date())
+        let action = WatchAction.undoLastLog
         pendingActions.append(action)
         
         // Optimistic update (we don't know exact amount, phone will correct)
@@ -104,13 +104,14 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
             return
         }
         
-        session.sendMessage(action.toDictionary(), replyHandler: { [weak self] reply in
+        let actionDict = actionToDictionary(action)
+        session.sendMessage(actionDict, replyHandler: { [weak self] reply in
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
                 self.isSyncing = false
                 
                 // Remove from pending
-                if let index = self.pendingActions.firstIndex(where: { $0.toDictionary()["timestamp"] as? TimeInterval == action.toDictionary()["timestamp"] as? TimeInterval }) {
+                if let index = self.pendingActions.firstIndex(of: action) {
                     self.pendingActions.remove(at: index)
                 }
                 
@@ -132,6 +133,19 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         
         for action in actionsToRetry {
             sendAction(action)
+        }
+    }
+    
+    private func actionToDictionary(_ action: WatchAction) -> [String: Any] {
+        switch action {
+        case .logPushups(let amount, let clientTimestamp):
+            return [
+                "type": "logPushups",
+                "amount": amount,
+                "clientTimestamp": clientTimestamp.timeIntervalSince1970
+            ]
+        case .undoLastLog:
+            return ["type": "undoLastLog"]
         }
     }
 }
