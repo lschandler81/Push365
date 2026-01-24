@@ -1,17 +1,24 @@
 import SwiftUI
 import WidgetKit
 import WatchKit
-
-// NOTE: Ensure WidgetSnapshot and WidgetDataStore are included in the Watch app target membership
-// and that the App Group capability is enabled with: group.com.lschandler81.Push365
+import WatchConnectivity
+import Combine
 
 struct WatchLoggingView: View {
-    @State private var snapshot: WidgetSnapshot?
+    @EnvironmentObject private var sync: WatchSyncManager
+
+    @State private var snapshot: DaySnapshot?
     @State private var isLoading = true
     @State private var isDoneHapticFired = false
 
     private let greenDone = Color(red: 0x4C/255, green: 0xAF/255, blue: 0x50/255)
     private let background = Color(red: 0x1E/255, green: 0x1E/255, blue: 0x1E/255)
+    
+    private let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm"
+        return f
+    }()
 
     var body: some View {
         ZStack {
@@ -23,6 +30,12 @@ struct WatchLoggingView: View {
                     Text("Day \(s.dayNumber)")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.9))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Debug marker showing snapshot timestamp
+                    Text("Timestamp: \(s.timestamp.description(with: Locale.current))")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.25))
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     Spacer(minLength: 6)
@@ -61,6 +74,12 @@ struct WatchLoggingView: View {
                             loggingButton("+20", amount: 20)
                         }
                     }
+                    
+                    // Footer updated timestamp
+                    Text("Updated \(timeFormatter.string(from: s.timestamp))")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
@@ -80,6 +99,13 @@ struct WatchLoggingView: View {
         }
         .onAppear {
             loadSnapshot()
+        }
+        .onReceive(sync.$currentSnapshot) { newSnapshot in
+            snapshot = newSnapshot
+            isLoading = false
+            if let s = newSnapshot {
+                isDoneHapticFired = s.remaining == 0
+            }
         }
     }
 
@@ -105,13 +131,13 @@ struct WatchLoggingView: View {
 
     private func loadSnapshot() {
         isLoading = true
-        let loaded = WidgetDataStore.load()
+        let loaded = sync.currentSnapshot ?? sync.getCurrentSnapshot()
         snapshot = loaded
         isLoading = false
     }
 
     private func log(amount: Int) {
-        guard var s = snapshot else { return }
+        guard let s = snapshot else { return }
 
         let now = Date()
         let calendar = Calendar.current
@@ -124,36 +150,11 @@ struct WatchLoggingView: View {
         // Immediate haptic feedback
         WKInterfaceDevice.current().play(.click)
 
-        // Update local snapshot immediately
-        let newCompleted = s.completed + amount
-        let newRemaining = max(0, s.target - newCompleted)
-        let newIsComplete = newRemaining == 0
+        // Send log update via sync manager
+        sync.sendLog(amount: amount)
 
-        s = WidgetSnapshot(
-            dayNumber: s.dayNumber,
-            target: s.target,
-            completed: newCompleted,
-            remaining: newRemaining,
-            isComplete: newIsComplete,
-            mode: s.mode,
-            programStartDate: s.programStartDate,
-            timestamp: now
-        )
-        snapshot = s
-
-        // Persist to shared store (App Group)
-        WidgetDataStore.save(s)
-
-        // Stronger haptic if DONE reached now; otherwise firm feedback
-        if newIsComplete {
-            WKInterfaceDevice.current().play(.success)
-            isDoneHapticFired = true
-        } else {
-            WKInterfaceDevice.current().play(.directionUp)
-        }
-
-        // Refresh complications/widgets
-        WidgetCenter.shared.reloadAllTimelines()
+        // Request snapshot refresh from phone
+        sync.requestSnapshot()
     }
 }
 

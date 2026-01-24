@@ -7,16 +7,74 @@
 
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 @main
 struct Push365App: App {
     @State private var modelContainer: ModelContainer?
     @State private var initError: Error?
     
+    @State private var logObserver: NSObjectProtocol?
+    @State private var snapshotObserver: NSObjectProtocol?
+    
+    private let phoneSync = PhoneSyncManager.shared
+    
     init() {
         _modelContainer = State(initialValue: Self.createModelContainer())
         if _modelContainer.wrappedValue == nil {
             // Error occurred - will be shown in UI
+        }
+        
+        phoneSync.activate()
+        
+        let center = NotificationCenter.default
+        
+        logObserver = center.addObserver(forName: .watchRequestedLog, object: nil, queue: .main) { notification in
+            guard let amount = notification.userInfo?["amount"] as? Int else { return }
+            
+            if let container = Self.createModelContainer() {
+                let context = ModelContext(container)
+                let store = ProgressStore()
+                do {
+                    try store.addLog(amount: amount, date: Date(), modelContext: context)
+                    let settings = try store.getOrCreateSettings(modelContext: context)
+                    let today = try store.getOrCreateDayRecord(for: Date(), modelContext: context)
+                    let snapshot = DaySnapshot(
+                        dayNumber: today.dayNumber,
+                        target: today.target,
+                        completed: today.completed,
+                        remaining: today.remaining,
+                        isComplete: today.isComplete,
+                        timestamp: Date()
+                    )
+                    PhoneSyncManager.shared.send(snapshot: snapshot)
+                    WidgetCenter.shared.reloadAllTimelines()
+                } catch {
+                    print("Watch log request error: \(error)")
+                }
+            }
+        }
+        
+        snapshotObserver = center.addObserver(forName: .watchRequestedSnapshot, object: nil, queue: .main) { _ in
+            if let container = Self.createModelContainer() {
+                let context = ModelContext(container)
+                let store = ProgressStore()
+                do {
+                    let settings = try store.getOrCreateSettings(modelContext: context)
+                    let today = try store.getOrCreateDayRecord(for: Date(), modelContext: context)
+                    let snapshot = DaySnapshot(
+                        dayNumber: today.dayNumber,
+                        target: today.target,
+                        completed: today.completed,
+                        remaining: today.remaining,
+                        isComplete: today.isComplete,
+                        timestamp: Date()
+                    )
+                    PhoneSyncManager.shared.send(snapshot: snapshot)
+                } catch {
+                    print("Snapshot request error: \(error)")
+                }
+            }
         }
     }
     

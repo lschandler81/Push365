@@ -70,7 +70,6 @@ struct Provider: AppIntentTimelineProvider {
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<WidgetEntry> {
         let currentDate = Date()
         let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: currentDate)
         
         // Read widget snapshot from shared storage
         let snapshot = WidgetDataStore.load()

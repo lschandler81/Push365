@@ -117,9 +117,19 @@
 		7E2F31B52F252DD3004C4CC9 /* Exceptions for "Push365" folder in "Push365 Watch Watch App" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Services/DaySnapshot.swift,
+				"Services/Notification+WatchSync.swift",
+				Services/WatchSyncManager.swift,
 				Services/WidgetDataStore.swift,
 			);
 			target = 7E2F31612F252AB0004C4CC9 /* Push365 Watch Watch App */;
+		};
+		7E2F31C12F25482C004C4CC9 /* Exceptions for "Push365" folder in "Push365" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Services/WatchSyncManager.swift,
+			);
+			target = 7EE9A5ED2F1FB11A00561F0F /* Push365 */;
 		};
 		7EF4BE422F23CB9E000ABAD4 /* Exceptions for "Push365Widget" folder in "Push365WidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -149,6 +159,7 @@
 		7EE9A5F02F1FB11A00561F0F /* Push365 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				7E2F31C12F25482C004C4CC9 /* Exceptions for "Push365" folder in "Push365" target */,
 				7E2F30212F23F96B004C4CC9 /* Exceptions for "Push365" folder in "Push365WidgetExtension" target */,
 				7E2F31B52F252DD3004C4CC9 /* Exceptions for "Push365" folder in "Push365 Watch Watch App" target */,
 			);
