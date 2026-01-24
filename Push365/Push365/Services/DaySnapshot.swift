@@ -1,8 +1,10 @@
-//
-//  DaySnapshot.swift
-//  Push365
-//
-//  Created by Lee Chandler on 24/01/2026.
-//
-
 import Foundation
+
+struct DaySnapshot: Codable, Equatable {
+    let dayNumber: Int
+    let target: Int
+    let completed: Int
+    let remaining: Int
+    let isComplete: Bool
+    let timestamp: Date
+}

@@ -76,6 +76,30 @@ struct Push365App: App {
                 }
             }
         }
+        
+        // Send initial snapshot to watch on launch
+        sendSnapshotToWatch()
+    }
+    
+    private func sendSnapshotToWatch() {
+        guard let container = Self.createModelContainer() else { return }
+        
+        let context = ModelContext(container)
+        let store = ProgressStore()
+        do {
+            let today = try store.getOrCreateDayRecord(for: Date(), modelContext: context)
+            let snapshot = DaySnapshot(
+                dayNumber: today.dayNumber,
+                target: today.target,
+                completed: today.completed,
+                remaining: today.remaining,
+                isComplete: today.isComplete,
+                timestamp: Date()
+            )
+            PhoneSyncManager.shared.send(snapshot: snapshot)
+        } catch {
+            print("Error sending snapshot to watch: \(error)")
+        }
     }
     
     static func createModelContainer() -> ModelContainer? {
