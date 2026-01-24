@@ -152,10 +152,16 @@ struct SmallWidgetView: View {
                     
                     // Remaining count or DONE
                     if entry.remaining > 0 {
-                        Text("\(entry.remaining)")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(.white.opacity(0.95))
+                        VStack(spacing: 4) {
+                            Text("\(entry.remaining)")
+                                .font(.system(size: 48, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(.white.opacity(0.95))
+                            
+                            Text("remaining")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
                     } else {
                         Text("DONE")
                             .font(.system(size: 32, weight: .bold))
@@ -170,18 +176,22 @@ struct SmallWidgetView: View {
                             Button(intent: LogPushupsIntent(amount: 5)) {
                                 Text("+5")
                                     .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.7))
+                                    .foregroundStyle(.white.opacity(0.9))
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
+                                    .padding(.vertical, 10)
+                                    .background(.white.opacity(0.12))
+                                    .clipShape(Capsule())
                             }
                             .buttonStyle(.plain)
                             
                             Button(intent: LogPushupsIntent(amount: 10)) {
                                 Text("+10")
                                     .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.7))
+                                    .foregroundStyle(.white.opacity(0.9))
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
+                                    .padding(.vertical, 10)
+                                    .background(.white.opacity(0.12))
+                                    .clipShape(Capsule())
                             }
                             .buttonStyle(.plain)
                         }
@@ -204,6 +214,13 @@ struct SmallWidgetView: View {
                 }
             }
         }
+        .overlay(
+            Text("v2")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.35))
+                .padding(6),
+            alignment: .topTrailing
+        )
     }
 }
 
@@ -255,16 +272,20 @@ struct MediumWidgetView: View {
                                 Button(intent: LogPushupsIntent(amount: 5)) {
                                     Text("+5")
                                         .font(.system(size: 14, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.7))
+                                        .foregroundStyle(.white.opacity(0.9))
                                         .frame(width: 50, height: 40)
+                                        .background(.white.opacity(0.12))
+                                        .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
                                 
                                 Button(intent: LogPushupsIntent(amount: 10)) {
                                     Text("+10")
                                         .font(.system(size: 14, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.7))
+                                        .foregroundStyle(.white.opacity(0.9))
                                         .frame(width: 50, height: 40)
+                                        .background(.white.opacity(0.12))
+                                        .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -273,16 +294,20 @@ struct MediumWidgetView: View {
                                 Button(intent: LogPushupsIntent(amount: 15)) {
                                     Text("+15")
                                         .font(.system(size: 14, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.7))
+                                        .foregroundStyle(.white.opacity(0.9))
                                         .frame(width: 50, height: 40)
+                                        .background(.white.opacity(0.12))
+                                        .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
                                 
                                 Button(intent: LogPushupsIntent(amount: 20)) {
                                     Text("+20")
                                         .font(.system(size: 14, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.7))
+                                        .foregroundStyle(.white.opacity(0.9))
                                         .frame(width: 50, height: 40)
+                                        .background(.white.opacity(0.12))
+                                        .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -302,6 +327,13 @@ struct MediumWidgetView: View {
                 }
             }
         }
+        .overlay(
+            Text("v2")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.35))
+                .padding(6),
+            alignment: .topTrailing
+        )
     }
 }
 
@@ -414,3 +446,4 @@ struct Push365LockScreenWidget: Widget {
     WidgetEntry(date: .now, dayNumber: 23, target: 23, completed: 15, hasData: true)
     WidgetEntry(date: .now, dayNumber: 23, target: 23, completed: 23, hasData: true)
 }
+
