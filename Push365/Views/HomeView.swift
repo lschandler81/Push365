@@ -8,7 +8,6 @@
 import SwiftUI
 import SwiftData
 import WidgetKit
-import WatchConnectivity
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
@@ -363,9 +362,6 @@ struct HomeView: View {
                 
                 // Update widget data
                 updateWidgetData(settings: settings, today: today)
-                
-                // Send snapshot to watch
-                sendSnapshotToWatch(settings: settings, today: today)
             }
         } catch {
             errorMessage = "Error loading data: \(error.localizedDescription)"
@@ -396,7 +392,6 @@ struct HomeView: View {
             if let settings = settings, let today = today {
                 notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
                 updateWidgetData(settings: settings, today: today)
-                sendSnapshotToWatch(settings: settings, today: today)
             }
         } catch {
             errorMessage = "Error logging: \(error.localizedDescription)"
@@ -417,7 +412,6 @@ struct HomeView: View {
             if let settings = settings, let today = today {
                 notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
                 updateWidgetData(settings: settings, today: today)
-                sendSnapshotToWatch(settings: settings, today: today)
             }
         } catch {
             errorMessage = "Error undoing: \(error.localizedDescription)"
@@ -457,7 +451,6 @@ struct HomeView: View {
             
             // Update widget
             updateWidgetData(settings: settings, today: today)
-            sendSnapshotToWatch(settings: settings, today: today)
             
             errorMessage = nil
         } catch {
@@ -496,18 +489,6 @@ struct HomeView: View {
 
         WidgetDataStore.save(snapshot)
         WidgetCenter.shared.reloadAllTimelines()
-    }
-    
-    private func sendSnapshotToWatch(settings: UserSettings, today: DayRecord) {
-        let snapshot = DaySnapshot(
-            dayNumber: today.dayNumber,
-            target: today.target,
-            completed: today.completed,
-            remaining: today.remaining,
-            isComplete: today.isComplete,
-            timestamp: Date()
-        )
-        PhoneSyncManager.shared.send(snapshot: snapshot)
     }
 }
 
