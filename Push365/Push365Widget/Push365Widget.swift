@@ -24,30 +24,34 @@ struct LogPushupsIntent: AppIntent {
     }
     
     func perform() async throws -> some IntentResult {
-        // Load current data
-        guard var data = WidgetDataStore.shared.loadData() else {
+        // Load current snapshot
+        guard var snapshot = WidgetDataStore.load() else {
             return .result()
         }
         
         // Check if it's still today
         let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: Date())
+        let now = Date()
         
-        if calendar.isDate(data.todayDate, inSameDayAs: startOfToday) {
+        if calendar.isDate(snapshot.timestamp, inSameDayAs: now) {
             // Same day - add to completed count
-            data = WidgetData(
-                programStartDate: data.programStartDate,
-                mode: data.mode,
-                lastCompletedTarget: data.lastCompletedTarget,
-                todayDate: data.todayDate,
-                todayCompleted: data.todayCompleted + amount
+            let newCompleted = snapshot.completed + amount
+            let newRemaining = max(0, snapshot.target - newCompleted)
+            let newIsComplete = newRemaining == 0
+            
+            snapshot = WidgetSnapshot(
+                dayNumber: snapshot.dayNumber,
+                target: snapshot.target,
+                completed: newCompleted,
+                remaining: newRemaining,
+                isComplete: newIsComplete,
+                mode: snapshot.mode,
+                programStartDate: snapshot.programStartDate,
+                timestamp: now
             )
             
-            // Save updated data
-            WidgetDataStore.shared.saveData(data)
-            
-            // Reload all widgets
-            WidgetCenter.shared.reloadAllTimelines()
+            // Save updated snapshot
+            WidgetDataStore.save(snapshot)
         }
         
         return .result()
@@ -66,38 +70,22 @@ struct Provider: AppIntentTimelineProvider {
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<WidgetEntry> {
         let currentDate = Date()
         let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: currentDate)
         
-        // Read widget data from shared storage
-        let widgetData = WidgetDataStore.shared.loadData()
+        // Read widget snapshot from shared storage
+        let snapshot = WidgetDataStore.load()
         
         var dayNumber = 1
         var target = 1
         var completed = 0
         var hasData = false
         
-        if let data = widgetData {
+        if let data = snapshot {
             hasData = true
             
-            // Calculate day number based on start date
-            let startDate = calendar.startOfDay(for: data.programStartDate)
-            let components = calendar.dateComponents([.day], from: startDate, to: startOfToday)
-            dayNumber = (components.day ?? 0) + 1
-            
-            // Calculate target based on mode
-            if data.mode == "strict" {
-                target = dayNumber
-            } else {
-                // Flexible: use last completed target + 1, or day number if no completions
-                target = data.lastCompletedTarget > 0 ? data.lastCompletedTarget + 1 : dayNumber
-            }
-            
-            // Use completed value if today matches stored date
-            if calendar.isDate(data.todayDate, inSameDayAs: startOfToday) {
-                completed = data.todayCompleted
-            } else {
-                completed = 0
-            }
+            // Use snapshot data directly
+            dayNumber = data.dayNumber
+            target = data.target
+            completed = data.completed
         }
         
         let entry = WidgetEntry(
@@ -148,25 +136,30 @@ struct SmallWidgetView: View {
     let entry: WidgetEntry
     
     var body: some View {
-        ZStack {
-            Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
-            
+        Group {
             if entry.hasData {
-                VStack(spacing: 8) {
+                VStack(spacing: 0) {
                     Text("Day \(entry.dayNumber)")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.9))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 12)
+                        .padding(.top, 12)
                     
                     Spacer()
                     
                     // Remaining count or DONE
                     if entry.remaining > 0 {
-                        Text("\(entry.remaining)")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(.white.opacity(0.95))
+                        VStack(spacing: 3) {
+                            Text("\(entry.remaining)")
+                                .font(.system(size: 44, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(.white.opacity(0.95))
+                            
+                            Text("remaining")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
                     } else {
                         Text("DONE")
                             .font(.system(size: 32, weight: .bold))
@@ -177,27 +170,31 @@ struct SmallWidgetView: View {
                     
                     // Buttons (only show if not complete)
                     if entry.remaining > 0 {
-                        HStack(spacing: 12) {
+                        HStack(spacing: 10) {
                             Button(intent: LogPushupsIntent(amount: 5)) {
                                 Text("+5")
                                     .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.7))
+                                    .foregroundStyle(.white.opacity(0.9))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 8)
+                                    .background(.white.opacity(0.12))
+                                    .clipShape(Capsule())
                             }
                             .buttonStyle(.plain)
                             
                             Button(intent: LogPushupsIntent(amount: 10)) {
                                 Text("+10")
                                     .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.7))
+                                    .foregroundStyle(.white.opacity(0.9))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 8)
+                                    .background(.white.opacity(0.12))
+                                    .clipShape(Capsule())
                             }
                             .buttonStyle(.plain)
                         }
                         .padding(.horizontal, 12)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, 12)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -215,6 +212,13 @@ struct SmallWidgetView: View {
                 }
             }
         }
+        .overlay(
+            Text("v2")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.35))
+                .padding(6),
+            alignment: .topTrailing
+        )
     }
 }
 
@@ -222,29 +226,22 @@ struct MediumWidgetView: View {
     let entry: WidgetEntry
     
     var body: some View {
-        ZStack {
-            Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
-            
+        Group {
             if entry.hasData {
                 HStack(spacing: 16) {
                     // Left side - Info
                     VStack(alignment: .leading, spacing: 4) {
-                        if entry.remaining > 0 {
-                            Text("Day \(entry.dayNumber)")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.9))
-                            
-                            Text("Target: \(entry.target)")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.7))
-                        } else {
-                            Text("DONE")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundStyle(Color(red: 0x4C/255, green: 0xAF/255, blue: 0x50/255))
-                        }
+                        Text("Day \(entry.dayNumber)")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.9))
+                        
+                        Text("Target: \(entry.target)")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.7))
                         
                         Spacer()
                         
+                        // Remaining number or DONE (replaces the number)
                         if entry.remaining > 0 {
                             Text("\(entry.remaining)")
                                 .font(.system(size: 42, weight: .bold, design: .rounded))
@@ -254,6 +251,10 @@ struct MediumWidgetView: View {
                             Text("remaining")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.6))
+                        } else {
+                            Text("DONE")
+                                .font(.system(size: 42, weight: .bold))
+                                .foregroundStyle(Color(red: 0x4C/255, green: 0xAF/255, blue: 0x50/255))
                         }
                     }
                     
@@ -266,16 +267,20 @@ struct MediumWidgetView: View {
                                 Button(intent: LogPushupsIntent(amount: 5)) {
                                     Text("+5")
                                         .font(.system(size: 14, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.7))
+                                        .foregroundStyle(.white.opacity(0.9))
                                         .frame(width: 50, height: 40)
+                                        .background(.white.opacity(0.12))
+                                        .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
                                 
                                 Button(intent: LogPushupsIntent(amount: 10)) {
                                     Text("+10")
                                         .font(.system(size: 14, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.7))
+                                        .foregroundStyle(.white.opacity(0.9))
                                         .frame(width: 50, height: 40)
+                                        .background(.white.opacity(0.12))
+                                        .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -284,16 +289,20 @@ struct MediumWidgetView: View {
                                 Button(intent: LogPushupsIntent(amount: 15)) {
                                     Text("+15")
                                         .font(.system(size: 14, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.7))
+                                        .foregroundStyle(.white.opacity(0.9))
                                         .frame(width: 50, height: 40)
+                                        .background(.white.opacity(0.12))
+                                        .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
                                 
                                 Button(intent: LogPushupsIntent(amount: 20)) {
                                     Text("+20")
                                         .font(.system(size: 14, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.7))
+                                        .foregroundStyle(.white.opacity(0.9))
                                         .frame(width: 50, height: 40)
+                                        .background(.white.opacity(0.12))
+                                        .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -313,6 +322,13 @@ struct MediumWidgetView: View {
                 }
             }
         }
+        .overlay(
+            Text("v2")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.35))
+                .padding(6),
+            alignment: .topTrailing
+        )
     }
 }
 
@@ -322,7 +338,7 @@ struct Push365Widget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
             Push365WidgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(Color(red: 30/255, green: 30/255, blue: 30/255), for: .widget)
         }
         .configurationDisplayName("Push365")
         .description("View your daily push-up target and progress")
@@ -338,6 +354,49 @@ struct ConfigurationAppIntent: WidgetConfigurationIntent {
 }
 
 // MARK: - Lock Screen Widget
+
+struct LockScreenProvider: TimelineProvider {
+    func placeholder(in context: Context) -> WidgetEntry {
+        WidgetEntry(date: Date(), dayNumber: 1, target: 1, completed: 0, hasData: false)
+    }
+    
+    func getSnapshot(in context: Context, completion: @escaping (WidgetEntry) -> Void) {
+        completion(WidgetEntry(date: Date(), dayNumber: 1, target: 1, completed: 0, hasData: false))
+    }
+    
+    func getTimeline(in context: Context, completion: @escaping (Timeline<WidgetEntry>) -> Void) {
+        let currentDate = Date()
+        let calendar = Calendar.current
+        
+        // Read widget snapshot from shared storage
+        let snapshot = WidgetDataStore.load()
+        
+        var dayNumber = 1
+        var target = 1
+        var completed = 0
+        var hasData = false
+        
+        if let data = snapshot {
+            hasData = true
+            dayNumber = data.dayNumber
+            target = data.target
+            completed = data.completed
+        }
+        
+        let entry = WidgetEntry(
+            date: currentDate,
+            dayNumber: dayNumber,
+            target: target,
+            completed: completed,
+            hasData: hasData
+        )
+        
+        // Update timeline at midnight
+        let midnight = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: currentDate)!)
+        let timeline = Timeline(entries: [entry], policy: .after(midnight))
+        completion(timeline)
+    }
+}
 
 struct LockScreenWidgetView: View {
     var entry: Provider.Entry
@@ -366,7 +425,7 @@ struct Push365LockScreenWidget: Widget {
     let kind: String = "Push365LockScreenWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+        StaticConfiguration(kind: kind, provider: LockScreenProvider()) { entry in
             LockScreenWidgetView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
@@ -382,3 +441,4 @@ struct Push365LockScreenWidget: Widget {
     WidgetEntry(date: .now, dayNumber: 23, target: 23, completed: 15, hasData: true)
     WidgetEntry(date: .now, dayNumber: 23, target: 23, completed: 23, hasData: true)
 }
+
