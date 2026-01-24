@@ -138,7 +138,7 @@ struct SmallWidgetView: View {
     
     var body: some View {
         ZStack {
-            Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
+            Color(red: 0x1C/255, green: 0x1C/255, blue: 0x1E/255)
             
             if entry.hasData {
                 VStack(spacing: 0) {
@@ -230,28 +230,23 @@ struct MediumWidgetView: View {
     
     var body: some View {
         ZStack {
-            Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
+            Color(red: 0x1C/255, green: 0x1C/255, blue: 0x1E/255)
             
             if entry.hasData {
                 HStack(spacing: 16) {
                     // Left side - Info
                     VStack(alignment: .leading, spacing: 4) {
-                        if entry.remaining > 0 {
-                            Text("Day \(entry.dayNumber)")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.9))
-                            
-                            Text("Target: \(entry.target)")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.7))
-                        } else {
-                            Text("DONE")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundStyle(Color(red: 0x4C/255, green: 0xAF/255, blue: 0x50/255))
-                        }
+                        Text("Day \(entry.dayNumber)")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.9))
+                        
+                        Text("Target: \(entry.target)")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.7))
                         
                         Spacer()
                         
+                        // Remaining number or DONE (replaces the number)
                         if entry.remaining > 0 {
                             Text("\(entry.remaining)")
                                 .font(.system(size: 42, weight: .bold, design: .rounded))
@@ -261,6 +256,10 @@ struct MediumWidgetView: View {
                             Text("remaining")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.6))
+                        } else {
+                            Text("DONE")
+                                .font(.system(size: 42, weight: .bold))
+                                .foregroundStyle(Color(red: 0x4C/255, green: 0xAF/255, blue: 0x50/255))
                         }
                     }
                     
@@ -344,7 +343,7 @@ struct Push365Widget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
             Push365WidgetEntryView(entry: entry)
-                .containerBackground(Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255), for: .widget)
+                .containerBackground(Color(red: 0x1C/255, green: 0x1C/255, blue: 0x1E/255), for: .widget)
         }
         .configurationDisplayName("Push365")
         .description("View your daily push-up target and progress")
