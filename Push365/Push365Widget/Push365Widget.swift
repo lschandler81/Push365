@@ -141,25 +141,26 @@ struct SmallWidgetView: View {
             Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
             
             if entry.hasData {
-                VStack(spacing: 8) {
+                VStack(spacing: 0) {
                     Text("Day \(entry.dayNumber)")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.9))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 12)
+                        .padding(.top, 12)
                     
                     Spacer()
                     
                     // Remaining count or DONE
                     if entry.remaining > 0 {
-                        VStack(spacing: 4) {
+                        VStack(spacing: 3) {
                             Text("\(entry.remaining)")
-                                .font(.system(size: 48, weight: .bold, design: .rounded))
+                                .font(.system(size: 44, weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(.white.opacity(0.95))
                             
                             Text("remaining")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.6))
                         }
                     } else {
@@ -172,13 +173,13 @@ struct SmallWidgetView: View {
                     
                     // Buttons (only show if not complete)
                     if entry.remaining > 0 {
-                        HStack(spacing: 12) {
+                        HStack(spacing: 10) {
                             Button(intent: LogPushupsIntent(amount: 5)) {
                                 Text("+5")
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundStyle(.white.opacity(0.9))
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
+                                    .padding(.vertical, 8)
                                     .background(.white.opacity(0.12))
                                     .clipShape(Capsule())
                             }
@@ -189,14 +190,14 @@ struct SmallWidgetView: View {
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundStyle(.white.opacity(0.9))
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
+                                    .padding(.vertical, 8)
                                     .background(.white.opacity(0.12))
                                     .clipShape(Capsule())
                             }
                             .buttonStyle(.plain)
                         }
                         .padding(.horizontal, 12)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, 12)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -343,7 +344,7 @@ struct Push365Widget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
             Push365WidgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255), for: .widget)
         }
         .configurationDisplayName("Push365")
         .description("View your daily push-up target and progress")
