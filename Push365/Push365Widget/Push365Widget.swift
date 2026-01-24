@@ -137,9 +137,7 @@ struct SmallWidgetView: View {
     let entry: WidgetEntry
     
     var body: some View {
-        ZStack {
-            Color(red: 0x1C/255, green: 0x1C/255, blue: 0x1E/255)
-            
+        Group {
             if entry.hasData {
                 VStack(spacing: 0) {
                     Text("Day \(entry.dayNumber)")
@@ -229,9 +227,7 @@ struct MediumWidgetView: View {
     let entry: WidgetEntry
     
     var body: some View {
-        ZStack {
-            Color(red: 0x1C/255, green: 0x1C/255, blue: 0x1E/255)
-            
+        Group {
             if entry.hasData {
                 HStack(spacing: 16) {
                     // Left side - Info
@@ -343,7 +339,7 @@ struct Push365Widget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
             Push365WidgetEntryView(entry: entry)
-                .containerBackground(Color(red: 0x1C/255, green: 0x1C/255, blue: 0x1E/255), for: .widget)
+                .containerBackground(Color(red: 30/255, green: 30/255, blue: 30/255), for: .widget)
         }
         .configurationDisplayName("Push365")
         .description("View your daily push-up target and progress")
