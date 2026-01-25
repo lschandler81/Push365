@@ -156,6 +156,22 @@ struct ContentView: View {
 
     private func reloadSnapshot() {
         snapshot = WatchSnapshotStore.shared.loadLatest()
+        
+        // Simulator workaround: if no data found, write sample data for testing
+        #if targetEnvironment(simulator)
+        if snapshot == nil {
+            let sampleSnapshot = WidgetSnapshot(
+                dayNumber: 25,
+                target: 25,
+                completed: 10,
+                remaining: 15,
+                isComplete: false,
+                timestamp: Date()
+            )
+            WidgetDataStore.save(sampleSnapshot)
+            snapshot = sampleSnapshot
+        }
+        #endif
     }
 }
 
