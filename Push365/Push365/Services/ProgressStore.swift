@@ -140,7 +140,6 @@ final class ProgressStore {
             let dateKey = DayCalculator.dateKey(for: date)
             settings.lastCompletedTarget = record.target
             settings.lastCompletedDateKey = dateKey
-            print("[Completion] Completed target \(record.target) on \(dateKey)")
         }
         
         try modelContext.save()

@@ -48,14 +48,12 @@ enum DayCalculator {
         
         // Strict mode: target always equals day number
         if settings.mode == .strict {
-            print("[Target] mode=\(settings.modeRaw) day=\(dayNumber) lastTarget=\(settings.lastCompletedTarget) lastDate=\(String(describing: settings.lastCompletedDateKey)) => target=\(baseline)")
             return baseline
         }
         
         // Flexible mode
         guard let lastCompletionDate = settings.lastCompletedDateKey else {
             // No completion history - use baseline
-            print("[Target] mode=\(settings.modeRaw) day=\(dayNumber) lastTarget=\(settings.lastCompletedTarget) lastDate=nil => target=\(baseline)")
             return baseline
         }
         
@@ -76,7 +74,6 @@ enum DayCalculator {
             target = max(1, settings.lastCompletedTarget + 1)
         }
         
-        print("[Target] mode=\(settings.modeRaw) day=\(dayNumber) lastTarget=\(settings.lastCompletedTarget) lastDate=\(String(describing: settings.lastCompletedDateKey)) yesterdayCompleted=\(yesterdayWasCompleted) => target=\(target)")
         return target
     }
     

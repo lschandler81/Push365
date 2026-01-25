@@ -189,7 +189,7 @@ struct ProgressScreen: View {
             // Update timestamp
             lastUpdated = Date()
         } catch {
-            print("Error loading progress: \(error)")
+            // Silent error handling
         }
     }
     

@@ -24,7 +24,6 @@ final class NotificationManager {
         do {
             return try await center.requestAuthorization(options: [.alert, .sound, .badge])
         } catch {
-            print("Error requesting notification permission: \(error)")
             return false
         }
     }
@@ -85,11 +84,7 @@ final class NotificationManager {
         let trigger = UNCalendarNotificationTrigger(dateMatching: triggerComponents, repeats: false)
         let request = UNNotificationRequest(identifier: nextMorningIdentifier, content: content, trigger: trigger)
         
-        center.add(request) { error in
-            if let error = error {
-                print("Error scheduling morning notification: \(error)")
-            }
-        }
+        center.add(request)
     }
     
     /// Calculates the target for a given date in flexible mode
@@ -170,11 +165,7 @@ final class NotificationManager {
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         
-        center.add(request) { error in
-            if let error = error {
-                print("Error firing completion notification: \(error)")
-            }
-        }
+        center.add(request)
     }
     
     // MARK: - Private Helpers
@@ -206,11 +197,7 @@ final class NotificationManager {
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         
-        center.add(request) { error in
-            if let error = error {
-                print("Error scheduling reminder notification: \(error)")
-            }
-        }
+        center.add(request)
     }
     
     private func cancelNotifications(for date: Date) {

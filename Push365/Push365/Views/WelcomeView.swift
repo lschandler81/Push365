@@ -494,7 +494,7 @@ struct WelcomeView: View {
                 // Complete
                 onComplete()
             } catch {
-                print("Error completing onboarding: \(error)")
+                // Silent error handling
             }
         }
     }

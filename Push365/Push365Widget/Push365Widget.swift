@@ -210,13 +210,6 @@ struct SmallWidgetView: View {
                 }
             }
         }
-        .overlay(
-            Text("v2")
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(Color.white.opacity(0.35))
-                .padding(6),
-            alignment: .topTrailing
-        )
     }
 }
 
@@ -320,13 +313,6 @@ struct MediumWidgetView: View {
                 }
             }
         }
-        .overlay(
-            Text("v2")
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(Color.white.opacity(0.35))
-                .padding(6),
-            alignment: .topTrailing
-        )
     }
 }
 

@@ -33,10 +33,7 @@ struct Push365App: App {
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            print("ModelContainer initialization failed: \(error)")
-
             // Schema migration issue - delete and recreate store
-            print("Attempting to reset data store due to schema migration...")
 
             // Get the default store URL
             let storeURL = modelConfiguration.url
@@ -45,13 +42,11 @@ struct Push365App: App {
                 let fileManager = FileManager.default
                 if fileManager.fileExists(atPath: storeURL.path) {
                     try fileManager.removeItem(at: storeURL)
-                    print("Removed old data store at: \(storeURL.path)")
                 }
 
                 // Try creating container again with fresh store
                 return try ModelContainer(for: schema, configurations: [modelConfiguration])
             } catch {
-                print("Failed to reset and recreate store: \(error)")
                 return nil
             }
         }

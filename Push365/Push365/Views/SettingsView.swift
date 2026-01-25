@@ -342,7 +342,7 @@ struct SettingsView: View {
                     let today = try progressStore.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
                     notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
                 } catch {
-                    print("Error scheduling notifications: \(error)")
+                    // Silent error handling
                 }
             }
         } else {
@@ -358,11 +358,11 @@ struct SettingsView: View {
                     let today = try progressStore.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
                     notificationManager.scheduleNotifications(for: Date(), settings: settings, record: today)
                 } catch {
-                    print("Error rescheduling notifications: \(error)")
+                    // Silent error handling
                 }
             }
         } catch {
-            print("Error saving settings: \(error)")
+            // Silent error handling
         }
     }
     
