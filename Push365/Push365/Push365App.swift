@@ -13,14 +13,14 @@ import WidgetKit
 struct Push365App: App {
     @State private var modelContainer: ModelContainer?
     @State private var initError: Error?
-    
+
     init() {
         _modelContainer = State(initialValue: Self.createModelContainer())
         if _modelContainer.wrappedValue == nil {
             // Error occurred - will be shown in UI
         }
     }
-    
+
     static func createModelContainer() -> ModelContainer? {
         let schema = Schema([
             UserSettings.self,
@@ -37,7 +37,7 @@ struct Push365App: App {
 
             // Schema migration issue - delete and recreate store
             print("Attempting to reset data store due to schema migration...")
-            
+
             // Get the default store URL
             let storeURL = modelConfiguration.url
             do {
@@ -47,7 +47,7 @@ struct Push365App: App {
                     try fileManager.removeItem(at: storeURL)
                     print("Removed old data store at: \(storeURL.path)")
                 }
-                
+
                 // Try creating container again with fresh store
                 return try ModelContainer(for: schema, configurations: [modelConfiguration])
             } catch {
@@ -56,7 +56,7 @@ struct Push365App: App {
             }
         }
     }
-    
+
     var body: some Scene {
         WindowGroup {
             if let container = modelContainer {
@@ -75,30 +75,30 @@ struct Push365App: App {
 
 struct DataLoadErrorView: View {
     let onRetry: () -> Void
-    
+
     var body: some View {
         ZStack {
             // Dark background matching app theme
             Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
                 .ignoresSafeArea()
-            
+
             VStack(spacing: 24) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 60))
                     .foregroundStyle(.orange.opacity(0.8))
-                
+
                 VStack(spacing: 12) {
                     Text("Unable to Load Data")
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.92))
-                    
+
                     Text("We couldn't initialize the app's storage. This may be due to a corrupted database or insufficient storage space.")
                         .font(.system(size: 15))
                         .foregroundStyle(.white.opacity(0.65))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
-                
+
                 Button(action: onRetry) {
                     Text("Try Again")
                         .font(.system(size: 17, weight: .semibold))
@@ -120,7 +120,7 @@ struct DataLoadErrorView: View {
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settings: [UserSettings]
-    
+
     var body: some View {
         Group {
             if let userSettings = settings.first, userSettings.hasCompletedOnboarding {

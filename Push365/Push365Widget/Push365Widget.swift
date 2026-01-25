@@ -45,8 +45,6 @@ struct LogPushupsIntent: AppIntent {
                 completed: newCompleted,
                 remaining: newRemaining,
                 isComplete: newIsComplete,
-                mode: snapshot.mode,
-                programStartDate: snapshot.programStartDate,
                 timestamp: now
             )
             

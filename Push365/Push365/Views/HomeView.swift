@@ -482,8 +482,6 @@ struct HomeView: View {
             completed: today.completed,
             remaining: today.remaining,
             isComplete: today.isComplete,
-            mode: settings.mode == .strict ? "strict" : "flexible",
-            programStartDate: settings.programStartDate,
             timestamp: Date()
         )
 

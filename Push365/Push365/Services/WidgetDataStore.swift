@@ -1,19 +1,16 @@
 import Foundation
 import WidgetKit
 
-struct WidgetSnapshot: Codable {
+struct WidgetSnapshot: Codable, Equatable {
     let dayNumber: Int
     let target: Int
     let completed: Int
     let remaining: Int
     let isComplete: Bool
-    let mode: String
-    let programStartDate: Date
     let timestamp: Date
 }
 
 enum WidgetDataStore {
-    // Must match the App Group enabled for both the app and the widget extension
     private static let suiteName = "group.com.lschandler81.Push365"
     private static let key = "push365_widget_snapshot"
 
@@ -23,17 +20,16 @@ enum WidgetDataStore {
         return try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
     }
 
+    static func clear() {
+        guard let defaults = UserDefaults(suiteName: suiteName) else { return }
+        defaults.removeObject(forKey: key)
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     static func save(_ snapshot: WidgetSnapshot) {
         guard let defaults = UserDefaults(suiteName: suiteName) else { return }
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
         defaults.set(data, forKey: key)
-        // Notify widgets to refresh when data changes
-        WidgetCenter.shared.reloadAllTimelines()
-    }
-
-    static func clear() {
-        guard let defaults = UserDefaults(suiteName: suiteName) else { return }
-        defaults.removeObject(forKey: key)
         WidgetCenter.shared.reloadAllTimelines()
     }
 }
