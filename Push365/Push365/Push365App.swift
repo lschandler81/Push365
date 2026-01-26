@@ -55,7 +55,7 @@ struct Push365App: App {
     var body: some Scene {
         WindowGroup {
             if let container = modelContainer {
-                RootView()
+                SplashGateView()
                     .preferredColorScheme(.dark)
                     .modelContainer(container)
             } else {
@@ -67,6 +67,75 @@ struct Push365App: App {
         }
     }
 }
+
+// MARK: - Splash Gate
+
+struct SplashGateView: View {
+    @State private var showSplash = true
+    @State private var splashOpacity = 0.0
+
+    // Timing
+    private let fadeInDuration: Double = 0.35
+    private let holdDuration: Double = 1.5
+    private let fadeOutDuration: Double = 0.30
+
+    var body: some View {
+        ZStack {
+            // While the splash is showing, use a pure black background so a black-backed logo blends in.
+            // Once we switch to the app, the normal views handle their own background.
+            if showSplash {
+                Color.black.ignoresSafeArea()
+            }
+
+            if showSplash {
+                SplashView()
+                    .opacity(splashOpacity)
+            } else {
+                RootView()
+            }
+        }
+        .onAppear {
+            // Start hidden then fade in
+            splashOpacity = 0
+            withAnimation(.easeOut(duration: fadeInDuration)) {
+                splashOpacity = 1
+            }
+
+            // Hold, then fade out, then switch
+            let fadeOutStart = fadeInDuration + holdDuration
+            DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutStart) {
+                withAnimation(.easeIn(duration: fadeOutDuration)) {
+                    splashOpacity = 0
+                }
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) {
+                    showSplash = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Root View
+
+struct RootView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var settings: [UserSettings]
+
+    var body: some View {
+        Group {
+            if let userSettings = settings.first, userSettings.hasCompletedOnboarding {
+                MainTabView()
+            } else {
+                WelcomeView(onComplete: {
+                    // Onboarding completion is handled by settings update
+                })
+            }
+        }
+    }
+}
+
+// MARK: - Data Load Error View
 
 struct DataLoadErrorView: View {
     let onRetry: () -> Void
@@ -112,19 +181,3 @@ struct DataLoadErrorView: View {
     }
 }
 
-struct RootView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var settings: [UserSettings]
-
-    var body: some View {
-        Group {
-            if let userSettings = settings.first, userSettings.hasCompletedOnboarding {
-                MainTabView()
-            } else {
-                WelcomeView(onComplete: {
-                    // Onboarding completion is handled by settings update
-                })
-            }
-        }
-    }
-}

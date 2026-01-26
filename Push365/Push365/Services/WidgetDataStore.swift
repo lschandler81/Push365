@@ -16,14 +16,18 @@ enum WidgetDataStore {
 
     static func load() -> WidgetSnapshot? {
         guard let defaults = UserDefaults(suiteName: suiteName) else {
+            NSLog("❌ WidgetDataStore.load: Failed to access App Group '\(suiteName)'")
             return nil
         }
         guard let data = defaults.data(forKey: key) else {
+            NSLog("⚠️ WidgetDataStore.load: No data found for key '\(key)'")
             return nil
         }
         guard let snapshot = try? JSONDecoder().decode(WidgetSnapshot.self, from: data) else {
+            NSLog("❌ WidgetDataStore.load: Failed to decode snapshot")
             return nil
         }
+        NSLog("✅ WidgetDataStore.load: Loaded Day \(snapshot.dayNumber), \(snapshot.completed)/\(snapshot.target)")
         return snapshot
     }
 
@@ -35,13 +39,16 @@ enum WidgetDataStore {
 
     static func save(_ snapshot: WidgetSnapshot) {
         guard let defaults = UserDefaults(suiteName: suiteName) else {
+            NSLog("❌ WidgetDataStore.save: Failed to access App Group '\(suiteName)'")
             return
         }
         guard let data = try? JSONEncoder().encode(snapshot) else {
+            NSLog("❌ WidgetDataStore.save: Failed to encode snapshot")
             return
         }
         defaults.set(data, forKey: key)
         defaults.synchronize()
+        NSLog("✅ WidgetDataStore.save: Saved Day \(snapshot.dayNumber), \(snapshot.completed)/\(snapshot.target)")
         WidgetCenter.shared.reloadAllTimelines()
     }
 }
