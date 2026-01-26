@@ -11,6 +11,7 @@ import WidgetKit
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     
     // Local state
     @State private var settings: UserSettings?
@@ -290,6 +291,11 @@ struct HomeView: View {
             .task {
                 await loadData()
             }
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                if newPhase == .active {
+                    syncWidgetChanges()
+                }
+            }
             .sheet(isPresented: $showingCustomSheet) {
                 CustomAmountSheet(
                     amountText: $customAmountText,
@@ -349,6 +355,12 @@ struct HomeView: View {
             settings = try store.getOrCreateSettings(modelContext: modelContext)
             today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
             errorMessage = nil
+            
+            // Sync any widget changes before overwriting
+            syncWidgetChanges()
+            
+            // Refresh today after sync
+            today = try? store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
             
             // Reset completion tracking
             wasComplete = today?.isComplete ?? false
@@ -487,6 +499,39 @@ struct HomeView: View {
 
         WidgetDataStore.save(snapshot)
         WidgetCenter.shared.reloadAllTimelines()
+    }
+    
+    private func syncWidgetChanges() {
+        guard let snapshot = WidgetDataStore.load(),
+              let currentToday = today,
+              let currentSettings = settings else {
+            return
+        }
+        
+        // Check if the snapshot is from today
+        let calendar = Calendar.current
+        guard calendar.isDateInToday(snapshot.timestamp) else {
+            return
+        }
+        
+        // If widget's completed count is higher than our local count, sync the difference
+        if snapshot.completed > currentToday.completed {
+            let difference = snapshot.completed - currentToday.completed
+            
+            do {
+                try store.addLog(amount: difference, date: Date(), modelContext: modelContext)
+                // Refresh today's record
+                today = try store.getOrCreateDayRecord(for: Date(), modelContext: modelContext)
+                
+                // Update notifications and widget with the synced data
+                if let updatedToday = today {
+                    notificationManager.scheduleNotifications(for: Date(), settings: currentSettings, record: updatedToday)
+                    updateWidgetData(settings: currentSettings, today: updatedToday)
+                }
+            } catch {
+                errorMessage = "Error syncing widget changes: \(error.localizedDescription)"
+            }
+        }
     }
 }
 

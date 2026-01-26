@@ -24,31 +24,30 @@ struct LogPushupsIntent: AppIntent {
     }
     
     func perform() async throws -> some IntentResult {
-        // Load current data
-        guard var data = WidgetDataStore.shared.loadData() else {
+        // Load current snapshot
+        guard let snapshot = WidgetDataStore.load() else {
+            NSLog("⚠️ LogPushupsIntent: No snapshot found")
             return .result()
         }
         
-        // Check if it's still today
-        let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: Date())
+        // Calculate new values
+        let newCompleted = snapshot.completed + amount
+        let newRemaining = max(0, snapshot.target - newCompleted)
+        let newIsComplete = newRemaining == 0
         
-        if calendar.isDate(data.todayDate, inSameDayAs: startOfToday) {
-            // Same day - add to completed count
-            data = WidgetData(
-                programStartDate: data.programStartDate,
-                mode: data.mode,
-                lastCompletedTarget: data.lastCompletedTarget,
-                todayDate: data.todayDate,
-                todayCompleted: data.todayCompleted + amount
-            )
-            
-            // Save updated data
-            WidgetDataStore.shared.saveData(data)
-            
-            // Reload all widgets
-            WidgetCenter.shared.reloadAllTimelines()
-        }
+        // Create updated snapshot
+        let updatedSnapshot = WidgetSnapshot(
+            dayNumber: snapshot.dayNumber,
+            target: snapshot.target,
+            completed: newCompleted,
+            remaining: newRemaining,
+            isComplete: newIsComplete,
+            timestamp: Date()
+        )
+        
+        // Save updated snapshot
+        WidgetDataStore.save(updatedSnapshot)
+        NSLog("✅ LogPushupsIntent: Added \(amount), now \(newCompleted)/\(snapshot.target)")
         
         return .result()
     }
@@ -66,38 +65,22 @@ struct Provider: AppIntentTimelineProvider {
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<WidgetEntry> {
         let currentDate = Date()
         let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: currentDate)
         
-        // Read widget data from shared storage
-        let widgetData = WidgetDataStore.shared.loadData()
+        // Read widget snapshot from shared storage
+        let snapshot = WidgetDataStore.load()
         
         var dayNumber = 1
         var target = 1
         var completed = 0
         var hasData = false
         
-        if let data = widgetData {
+        if let data = snapshot {
             hasData = true
             
-            // Calculate day number based on start date
-            let startDate = calendar.startOfDay(for: data.programStartDate)
-            let components = calendar.dateComponents([.day], from: startDate, to: startOfToday)
-            dayNumber = (components.day ?? 0) + 1
-            
-            // Calculate target based on mode
-            if data.mode == "strict" {
-                target = dayNumber
-            } else {
-                // Flexible: use last completed target + 1, or day number if no completions
-                target = data.lastCompletedTarget > 0 ? data.lastCompletedTarget + 1 : dayNumber
-            }
-            
-            // Use completed value if today matches stored date
-            if calendar.isDate(data.todayDate, inSameDayAs: startOfToday) {
-                completed = data.todayCompleted
-            } else {
-                completed = 0
-            }
+            // Use snapshot data directly
+            dayNumber = data.dayNumber
+            target = data.target
+            completed = data.completed
         }
         
         let entry = WidgetEntry(
