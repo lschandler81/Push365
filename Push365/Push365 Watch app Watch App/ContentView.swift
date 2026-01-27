@@ -89,6 +89,9 @@ struct ContentView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { reloadSnapshot() }
                 .onAppear { reloadSnapshot() }
+                .onReceive(NotificationCenter.default.publisher(for: .watchSnapshotUpdated)) { _ in
+                    reloadSnapshot()
+                }
             }
         }
     }

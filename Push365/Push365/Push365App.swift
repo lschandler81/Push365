@@ -16,6 +16,7 @@ struct Push365App: App {
 
     init() {
         _modelContainer = State(initialValue: Self.createModelContainer())
+        _ = PhoneWatchSyncManager.shared
         if _modelContainer.wrappedValue == nil {
             // Error occurred - will be shown in UI
         }
@@ -180,4 +181,3 @@ struct DataLoadErrorView: View {
         }
     }
 }
-

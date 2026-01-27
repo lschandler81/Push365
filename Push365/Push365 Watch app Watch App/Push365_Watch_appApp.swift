@@ -9,6 +9,10 @@ import SwiftUI
 
 @main
 struct Push365_Watch_app_Watch_AppApp: App {
+    init() {
+        _ = WatchSyncReceiver.shared
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

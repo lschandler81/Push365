@@ -498,6 +498,7 @@ struct HomeView: View {
         )
 
         WidgetDataStore.save(snapshot)
+        PhoneWatchSyncManager.shared.send(snapshot: snapshot)
         WidgetCenter.shared.reloadAllTimelines()
     }
     
@@ -943,4 +944,3 @@ struct ProtocolDayConfirmationSheet: View {
     HomeView()
         .modelContainer(for: [UserSettings.self, DayRecord.self, LogEntry.self], inMemory: true)
 }
-
