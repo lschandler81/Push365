@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Foundation
+import WatchKit
 
 // App theme colors (match iPhone aesthetic)
 private let appBackgroundTop = Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
@@ -49,11 +50,13 @@ struct ProgressRing: View {
 // MARK: - Today View
 struct ContentView: View {
     @State private var snapshot: WidgetSnapshot? = nil
+    @State private var wasComplete = false
+    @State private var hasLoadedSnapshot = false
 
     var body: some View {
         GeometryReader { geo in
             let size = min(geo.size.width, geo.size.height)
-            let ringSize = max(92, min(128, size * 0.75))
+            let ringSize = max(96, min(132, size * 0.76))
 
             ZStack {
                 LinearGradient(
@@ -85,6 +88,12 @@ struct ContentView: View {
                         )
                     }
                 }
+                .overlay(alignment: .topLeading) {
+                    // Keep “Day 25” in the top-left, visually aligned with the system time.
+                    header(day: snapshot?.dayNumber)
+                        .padding(.leading, 8)
+                        .padding(.top, 2)
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
                 .onTapGesture { reloadSnapshot() }
@@ -110,86 +119,78 @@ struct ContentView: View {
     }
 
     private func header(day: Int?) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 3) {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
             Text("Day")
-                .font(.system(size: 12, weight: .regular))
+                .font(.system(size: 11, weight: .regular))
                 .foregroundStyle(.white.opacity(0.42))
             Text("\(day ?? 1)")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.9))
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, 14)
-        .padding(.top, 8)
     }
 
     private func incompleteView(dayNumber: Int?, target: Int, completed: Int, ringSize: CGFloat) -> some View {
         let remaining = snapshot?.remaining ?? max(0, target - completed)
         let progress = target == 0 ? 0 : Double(completed) / Double(target)
 
-        return VStack(spacing: 6) {
-            header(day: dayNumber)
+        return ZStack {
+            ProgressRing(
+                progress: progress,
+                accent: appBlue,
+                progressWidth: 9,
+                trackWidth: 5
+            )
+            .frame(width: ringSize, height: ringSize)
 
-            Spacer(minLength: 0)
-
-            ZStack {
-                ProgressRing(
-                    progress: progress,
-                    accent: appBlue,
-                    progressWidth: 9,
-                    trackWidth: 5
-                )
-                .frame(width: ringSize, height: ringSize)
-
-                VStack(spacing: 1) {
-                    Text("\(remaining)")
-                        .font(.system(size: 54, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
+            VStack(spacing: 8) {
+                Text("\(remaining)")
+                    .font(.system(size: ringSize * 0.44, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+                    .minimumScaleFactor(0.55)
+                    .lineLimit(1)
 
                     Text("remaining")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.48))
-                        .padding(.top, 1)
-                }
+                        .font(.system(size: max(11, ringSize * 0.12), weight: .medium))
+                        .foregroundStyle(.white.opacity(0.50))
+                        .offset(y: -8)
             }
-            .frame(maxWidth: .infinity)
-
-            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
     private func completeView(dayNumber: Int?, ringSize: CGFloat) -> some View {
-        return VStack(spacing: 6) {
-            header(day: dayNumber)
+        return ZStack {
+            ProgressRing(
+                progress: 1.0,
+                accent: appGreen,
+                progressWidth: 9,
+                trackWidth: 5
+            )
+            .frame(width: ringSize, height: ringSize)
 
-            Spacer(minLength: 0)
-
-            ZStack {
-                ProgressRing(
-                    progress: 1.0,
-                    accent: appGreen,
-                    progressWidth: 9,
-                    trackWidth: 5
-                )
-                .frame(width: ringSize, height: ringSize)
-
-                Text("DONE")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(appGreen)
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-
-            Spacer(minLength: 0)
+            Text("DONE")
+                .font(.system(size: ringSize * 0.27, weight: .bold, design: .rounded))
+                .foregroundStyle(appGreen)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
     private func reloadSnapshot() {
-        snapshot = WatchSnapshotStore.shared.loadLatest()
+        let latest = WatchSnapshotStore.shared.loadLatest()
+        snapshot = latest
+        if let isComplete = latest?.isComplete {
+            if hasLoadedSnapshot, isComplete && !wasComplete {
+                WKInterfaceDevice.current().play(.success)
+            }
+            wasComplete = isComplete
+            hasLoadedSnapshot = true
+        } else {
+            wasComplete = false
+            hasLoadedSnapshot = true
+        }
         
         // Simulator-only fallback (don’t write back to the shared store)
         #if targetEnvironment(simulator)

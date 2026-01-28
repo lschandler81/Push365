@@ -7,11 +7,13 @@
 
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settings: [UserSettings]
     @Query private var allRecords: [DayRecord]
+    @Query private var allLogs: [LogEntry]
     
     @State private var showingResetConfirmation = false
     @State private var resetConfirmationText = ""
@@ -382,25 +384,22 @@ struct SettingsView: View {
         for record in allRecords {
             modelContext.delete(record)
         }
+
+        // Delete all logs (defensive in case any exist outside a DayRecord)
+        for log in allLogs {
+            modelContext.delete(log)
+        }
         
-        // Reset UserSettings
-        if let settings = settings.first {
-            settings.hasCompletedOnboarding = false
-            settings.programStartDate = Date()
-            settings.trackingStartDate = nil
-            settings.currentStreak = 0
-            settings.longestStreak = 0
-            settings.lastCompletedDateKey = nil
-            settings.lastStreakEvaluatedDateKey = nil
-            settings.lastCompletedTarget = 0
-            settings.modeRaw = "flexible"
-            
-            // Reset Protocol Days
-            settings.protocolDaysUsed = 0
-            settings.protocolDayLimit = 5
+        // Delete UserSettings to force a clean onboarding start
+        for setting in settings {
+            modelContext.delete(setting)
         }
         
         try? modelContext.save()
+
+        // Clear widget snapshot and notify watch
+        WidgetDataStore.clear()
+        PhoneWatchSyncManager.shared.sendClearSnapshot()
         
         // Dismiss confirmation
         showingResetConfirmation = false
