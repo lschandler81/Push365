@@ -24,7 +24,7 @@ final class DayRecord {
     /// Total completed push-ups
     var completed: Int
     
-    /// Whether this day was completed as a Protocol Day
+    /// Whether this day was completed as a Recovery Day
     var isProtocolDay: Bool
     
     /// Log entries for this day

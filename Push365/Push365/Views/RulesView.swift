@@ -42,14 +42,14 @@ struct RulesView: View {
                         }
                     }
                     
-                    // Protocol Days
+                    // Recovery Days
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Protocol Days")
+                        Text("Recovery Days")
                             .font(.system(size: 22, weight: .semibold))
                         
                         VStack(alignment: .leading, spacing: 8) {
                             BulletPoint(text: "Life happens. Injury happens.")
-                            BulletPoint(text: "On rare days, you may complete a Protocol Day:")
+                            BulletPoint(text: "On rare days, you may use a Recovery Day:")
                             
                             VStack(alignment: .leading, spacing: 8) {
                                 BulletPoint(text: "One strict rep", indent: 1)
@@ -57,7 +57,7 @@ struct RulesView: View {
                             }
                             .padding(.leading, 20)
                             
-                            BulletPoint(text: "Protocol Days preserve continuity, but do not increase the target.")
+                            BulletPoint(text: "Recovery Days preserve continuity, but do not increase the next target.")
                             BulletPoint(text: "They are limited. They are intentional. They are not rest days.")
                         }
                     }

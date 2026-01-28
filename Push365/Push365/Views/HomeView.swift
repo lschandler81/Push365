@@ -76,7 +76,7 @@ struct HomeView: View {
                                 showingModeInfo = true
                             }) {
                                 HStack(spacing: 6) {
-                                    Text(settings.mode == .strict ? "Strict" : "Flexible")
+                                    Text(settings.mode == .strict ? "Standard" : "Adaptive")
                                         .font(.system(size: 12, weight: .medium))
                                         .foregroundStyle(DSColor.textSecondary.opacity(0.7))
                                     
@@ -224,7 +224,7 @@ struct HomeView: View {
                         }
                         .disabled(today.isComplete)
                         
-                        // Protocol Day button (only when target not met and has protocols remaining)
+                        // Recovery Day button (only when target not met and has recoveries remaining)
                         if !today.isComplete, let settings = settings, settings.protocolDaysUsed < settings.protocolDayLimit {
                             Button {
                                 showingProtocolDayConfirmation = true
@@ -233,7 +233,7 @@ struct HomeView: View {
                                     Image(systemName: "shield.fill")
                                         .font(.system(size: 13))
                                     VStack(spacing: 2) {
-                                        Text("Protocol Day")
+                                        Text("Recovery Day")
                                             .font(.system(size: 14, weight: .semibold))
                                         Text("\(settings.protocolDayLimit - settings.protocolDaysUsed) remaining")
                                             .font(.system(size: 11))
@@ -436,7 +436,7 @@ struct HomeView: View {
         guard !today.isComplete else { return }
         
         do {
-            // Mark day as complete via Protocol Day
+            // Mark day as complete via Recovery Day
             today.isProtocolDay = true
             today.completed = today.target
             
@@ -736,7 +736,7 @@ struct ModeInfoSheet: View {
                             .textCase(.uppercase)
                             .tracking(1)
                         
-                        Text(mode == .strict ? "Strict" : "Flexible")
+                        Text(mode == .strict ? "Standard" : "Adaptive")
                             .font(.system(size: 28, weight: .semibold))
                             .foregroundStyle(DSColor.textPrimary)
                     }
@@ -746,26 +746,16 @@ struct ModeInfoSheet: View {
                     VStack(alignment: .leading, spacing: 16) {
                         if mode == .strict {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Today's target equals the day number.")
+                                Text("Your target increases by one every day, no matter what.")
                                     .font(.system(size: 16))
                                     .foregroundStyle(DSColor.textPrimary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                
-                                Text("Example: Day 21 → target 21, even if you missed yesterday.")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         } else {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Your target only increases after you complete it.")
+                                Text("Your target increases when you complete the previous day.")
                                     .font(.system(size: 16))
                                     .foregroundStyle(DSColor.textPrimary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                
-                                Text("Example: If you miss a day, tomorrow stays at last completed + 1.")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
@@ -826,7 +816,7 @@ struct ProtocolDayConfirmationSheet: View {
                     
                     Spacer()
                     
-                    Text("Protocol Day")
+                    Text("Recovery Day")
                         .font(DSFont.button)
                         .fontWeight(.semibold)
                         .foregroundStyle(DSColor.textPrimary)
@@ -856,10 +846,10 @@ struct ProtocolDayConfirmationSheet: View {
                         
                         // Message
                         VStack(spacing: 16) {
-                            Text("Use a Protocol Day?")
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundStyle(DSColor.textPrimary)
-                                .multilineTextAlignment(.center)
+                        Text("Use a Recovery Day?")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                            .multilineTextAlignment(.center)
                             
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("This will:")
@@ -891,7 +881,7 @@ struct ProtocolDayConfirmationSheet: View {
                             )
                             
                             VStack(spacing: 8) {
-                                Text("\(remaining) Protocol \(remaining == 1 ? "Day" : "Days") remaining")
+                                Text("\(remaining) Recovery \(remaining == 1 ? "Day" : "Days") remaining")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundStyle(DSColor.textSecondary)
                                 
@@ -911,7 +901,7 @@ struct ProtocolDayConfirmationSheet: View {
                     Button {
                         onConfirm()
                     } label: {
-                        Text("Use Protocol Day")
+                        Text("Use Recovery Day")
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(DSColor.textPrimary)
                             .frame(maxWidth: .infinity)

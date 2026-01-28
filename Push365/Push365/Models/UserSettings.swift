@@ -35,18 +35,18 @@ enum ProgressMode: String, Codable, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .strict:
-            return "Strict Mode"
+            return "Standard Mode"
         case .flexible:
-            return "Flexible Mode"
+            return "Adaptive Mode"
         }
     }
     
     var shortDescription: String {
         switch self {
         case .strict:
-            return "Target equals the day number."
+            return "Your target increases by one every day, no matter what."
         case .flexible:
-            return "Target increases only after you complete it."
+            return "Your target increases when you complete the previous day."
         }
     }
 }
@@ -81,7 +81,7 @@ final class UserSettings {
     // Flexible mode tracking
     var lastCompletedTarget: Int
     
-    // Protocol Days (limited emergency continuity option)
+    // Recovery Days (limited fallback option to preserve continuity)
     var protocolDaysUsed: Int
     var protocolDayLimit: Int
     

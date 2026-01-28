@@ -512,18 +512,13 @@ struct ModeExplanationSheet: View {
                 
                 VStack(alignment: .leading, spacing: 32) {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Strict Mode")
+                        Text("Standard Mode")
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(DSColor.textPrimary)
                         
-                        Text("Target matches the day number.")
+                        Text("Your target increases by one every day, no matter what.")
                             .font(.system(size: 15))
                             .foregroundStyle(DSColor.textSecondary)
-                        
-                        Text("Example: If you start Jan 1: Day 3 target is 3.")
-                            .font(.system(size: 14))
-                            .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                            .padding(.leading, 12)
                     }
                     .padding(20)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -533,18 +528,13 @@ struct ModeExplanationSheet: View {
                     )
                     
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Flexible Mode")
+                        Text("Adaptive Mode")
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(DSColor.textPrimary)
                         
-                        Text("Target only increases after you complete it.")
+                        Text("Your target increases when you complete the previous day.")
                             .font(.system(size: 15))
                             .foregroundStyle(DSColor.textSecondary)
-                        
-                        Text("Example: If you miss a day: tomorrow stays at last completed + 1.")
-                            .font(.system(size: 14))
-                            .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                            .padding(.leading, 12)
                     }
                     .padding(20)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -664,4 +654,3 @@ struct BirthdayPickerSheet: View {
     WelcomeView(onComplete: {})
         .modelContainer(for: [UserSettings.self, DayRecord.self, LogEntry.self], inMemory: true)
 }
-

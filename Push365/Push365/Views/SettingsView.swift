@@ -142,7 +142,7 @@ struct SettingsView: View {
                                 )
                                 
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text(userSettings.mode == .strict ? "Target matches the day number." : "Target only increases after you complete it.")
+                                    Text(userSettings.mode == .strict ? "Your target increases by one every day, no matter what." : "Your target increases when you complete the previous day.")
                                         .font(DSFont.caption)
                                         .foregroundStyle(DSColor.textSecondary.opacity(0.7))
                                         .fixedSize(horizontal: false, vertical: true)

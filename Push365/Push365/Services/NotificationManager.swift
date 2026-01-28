@@ -73,7 +73,7 @@ final class NotificationManager {
             // Flexible mode: generic message (or calculate target if needed)
             content.body = "Your target today is \(target) push-ups."
             if target != dayNumber {
-                content.body += " Flexible mode keeps your target steady until completed."
+                content.body += " Adaptive mode keeps your target steady until completed."
             }
         }
         
