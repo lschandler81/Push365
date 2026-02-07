@@ -12,6 +12,10 @@ import UserNotifications
 final class NotificationManager {
     
     private let center = UNUserNotificationCenter.current()
+
+    private func pushUpLabel(for count: Int) -> String {
+        count == 1 ? "push-up" : "push-ups"
+    }
     
     // Identifier for the next morning notification
     private let nextMorningIdentifier = "next-morning-reminder"
@@ -68,10 +72,10 @@ final class NotificationManager {
         
         if settings.mode == .strict {
             // Strict mode: show specific target
-            content.body = "Your target today is \(target) push-ups."
+            content.body = "Your target today is \(target) \(pushUpLabel(for: target))."
         } else {
             // Flexible mode: generic message (or calculate target if needed)
-            content.body = "Your target today is \(target) push-ups."
+            content.body = "Your target today is \(target) \(pushUpLabel(for: target))."
             if target != dayNumber {
                 content.body += " Adaptive mode keeps your target steady until completed."
             }

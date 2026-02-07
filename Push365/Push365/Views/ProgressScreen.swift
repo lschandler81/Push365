@@ -304,6 +304,10 @@ struct TotalRow: View {
     let title: String
     let value: Int
     let icon: String
+
+    private var pushUpLabel: String {
+        value == 1 ? "push-up" : "push-ups"
+    }
     
     var body: some View {
         HStack(spacing: 16) {
@@ -323,7 +327,7 @@ struct TotalRow: View {
                     .font(DSFont.mediumNumber)
                     .foregroundStyle(DSColor.textPrimary)
                 
-                Text("push-ups")
+                Text(pushUpLabel)
                     .font(DSFont.caption)
                     .foregroundStyle(DSColor.textSecondary.opacity(0.7))
             }

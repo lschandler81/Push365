@@ -15,6 +15,10 @@ struct HistoryDetailView: View {
     @Query private var allRecords: [DayRecord]
     
     @State private var logs: [LogEntry] = []
+
+    private func pushUpLabel(for count: Int) -> String {
+        count == 1 ? "push-up" : "push-ups"
+    }
     
     var body: some View {
         ZStack {
@@ -109,7 +113,7 @@ struct HistoryDetailView: View {
                                             .font(.system(size: 16))
                                             .foregroundStyle(DSColor.accent)
                                         
-                                        Text("\(log.amount) push-ups")
+                                        Text("\(log.amount) \(pushUpLabel(for: log.amount))")
                                             .font(.system(size: 15))
                                             .foregroundStyle(DSColor.textPrimary)
                                         

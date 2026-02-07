@@ -27,6 +27,10 @@ struct HomeView: View {
     private let store = ProgressStore()
     private let motivation = MotivationService()
     private let notificationManager = NotificationManager()
+
+    private let customTabBarHeight: CGFloat = 56
+    private let panelHeight: CGFloat = 260
+    private let panelTopPadding: CGFloat = 8
     
     var body: some View {
         NavigationStack {
@@ -59,53 +63,28 @@ struct HomeView: View {
                                 .padding(.top, adaptiveTopPadding(for: geometry))
                             
                             Spacer()
-                                .frame(height: adaptiveSpacing(for: geometry, base: 20))
+                                .frame(height: adaptiveSpacing(for: geometry, base: 40))
                             
-                            // Day number - the hero alongside ring
-                            Text("Day \(today.dayNumber)")
-                                .font(DSFont.dayTitle)
-                                .foregroundStyle(DSColor.textPrimary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.top, adaptiveTopPadding(for: geometry))
-                            
-                            Spacer()
-                                .frame(height: adaptiveSpacing(for: geometry, base: 12))
-                            
-                            // Mode indicator pill
-                            Button(action: {
-                                showingModeInfo = true
-                            }) {
-                                HStack(spacing: 6) {
-                                    Text(settings.mode == .strict ? "Standard" : "Adaptive")
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                                    
-                                    Image(systemName: "info.circle")
-                                        .font(.system(size: 11))
-                                        .foregroundStyle(DSColor.textSecondary.opacity(0.5))
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule()
-                                        .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
-                                        .background(Capsule().fill(DSColor.surface.opacity(0.3)))
+                            VStack(spacing: adaptiveSpacing(for: geometry, base: 12)) {
+                                // Day number - the hero alongside ring
+                                Text("Day \(today.dayNumber)")
+                                    .font(DSFont.dayTitle)
+                                    .foregroundStyle(DSColor.textPrimary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.top, -12)
+                                
+                                // Circular Progress Ring - the hero
+                                CircularProgressRing(
+                                    progress: Double(today.completed) / Double(max(1, today.target)),
+                                    completed: today.completed,
+                                    target: today.target,
+                                    remaining: today.remaining,
+                                    isComplete: today.isComplete,
+                                    firstName: settings.firstName
                                 )
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            
-                            Spacer()
-                                .frame(height: adaptiveSpacing(for: geometry, base: 20))
-                            
-                            // Circular Progress Ring - the hero
-                            CircularProgressRing(
-                                progress: Double(today.completed) / Double(max(1, today.target)),
-                                completed: today.completed,
-                                target: today.target,
-                                remaining: today.remaining,
-                                isComplete: today.isComplete,
-                                firstName: settings.firstName
-                            )
+                            .padding(.top, adaptiveSpacing(for: geometry, base: 20))
+                            .padding(.bottom, adaptiveSpacing(for: geometry, base: 8))
                             .onChange(of: today.isComplete) { oldValue, newValue in
                                 if newValue && !wasComplete {
                                     let impact = UIImpactFeedbackGenerator(style: .medium)
@@ -121,7 +100,7 @@ struct HomeView: View {
                             }
                             
                             Spacer()
-                                .frame(height: adaptiveSpacing(for: geometry, base: 28))
+                                .frame(height: adaptiveSpacing(for: geometry, base: 20))
                             
                             // Streak indicator (prominent when complete, hidden when not complete)
                             if today.isComplete {
@@ -155,6 +134,7 @@ struct HomeView: View {
                             }
                             
                             Spacer()
+                                .frame(minHeight: 0)
                             
                         } else {
                             ProgressView()
@@ -169,122 +149,116 @@ struct HomeView: View {
                                 .padding()
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: .infinity)
                 }
-            }
-            .safeAreaInset(edge: .bottom) {
-                if let today = today {
-                    // Bottom control stack (fixed above tab bar)
-                    VStack(spacing: 12) {
-                        // Quick Log Buttons
-                        HStack(spacing: 12) {
-                            QuickLogButton(amount: 5, isLocked: today.isComplete) {
-                                logPushups(amount: 5)
-                            }
-                            QuickLogButton(amount: 10, isLocked: today.isComplete) {
-                                logPushups(amount: 10)
-                            }
-                            QuickLogButton(amount: 20, isLocked: today.isComplete) {
-                                logPushups(amount: 20)
-                            }
-                        }
-                        
-                        // Custom Amount button
-                        Button(action: {
-                            showingCustomSheet = true
-                        }) {
-                            HStack(spacing: 8) {
-                                Image(systemName: today.isComplete ? "lock.fill" : "plus.circle")
-                                    .font(.system(size: 14))
-                                Text("Custom Amount")
-                                    .font(.system(size: 15, weight: .medium))
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(
-                                today.isComplete ? 
-                                    DSColor.surface.opacity(0.3) : 
-                                    DSColor.surface.opacity(0.5)
-                            )
-                            .foregroundStyle(
-                                today.isComplete ? 
-                                    DSColor.textSecondary.opacity(0.4) : 
-                                    DSColor.textSecondary.opacity(0.8)
-                            )
-                            .cornerRadius(DSRadius.button)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: DSRadius.button)
-                                    .strokeBorder(
-                                        today.isComplete ? 
-                                            DSColor.textSecondary.opacity(0.15) : 
-                                            Color.clear,
-                                        lineWidth: 1
-                                    )
-                            )
-                        }
-                        .disabled(today.isComplete)
-                        
-                        // Recovery Day button (only when target not met and has recoveries remaining)
-                        if !today.isComplete, let settings = settings, settings.protocolDaysUsed < settings.protocolDayLimit {
-                            Button {
-                                showingProtocolDayConfirmation = true
-                            } label: {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "shield.fill")
-                                        .font(.system(size: 13))
-                                    VStack(spacing: 2) {
-                                        Text("Recovery Day")
-                                            .font(.system(size: 14, weight: .semibold))
-                                        Text("\(settings.protocolDayLimit - settings.protocolDaysUsed) remaining")
-                                            .font(.system(size: 11))
+                .safeAreaInset(edge: .bottom) {
+                    if let today = today {
+                        // Bottom control stack (fixed above tab bar)
+                        VStack(spacing: 12) {
+                            Text("Log your push-ups here")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .padding(.bottom, 4)
+
+                                // Quick Log Buttons
+                                HStack(spacing: 12) {
+                                    QuickLogButton(amount: 5, isLocked: today.isComplete) {
+                                        logPushups(amount: 5)
+                                    }
+                                    QuickLogButton(amount: 10, isLocked: today.isComplete) {
+                                        logPushups(amount: 10)
+                                    }
+                                    QuickLogButton(amount: 20, isLocked: today.isComplete) {
+                                        logPushups(amount: 20)
                                     }
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(DSColor.surface.opacity(0.4))
-                                .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                                .cornerRadius(DSRadius.button)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: DSRadius.button)
-                                        .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
-                                )
+                                
+                                // Custom Amount button
+                                Button(action: {
+                                    showingCustomSheet = true
+                                }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: today.isComplete ? "lock.fill" : "plus.circle")
+                                            .font(.system(size: 14))
+                                        Text("Log total")
+                                            .font(.system(size: 15, weight: .medium))
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        today.isComplete ?
+                                            DSColor.surface.opacity(0.3) :
+                                            DSColor.surface.opacity(0.5)
+                                    )
+                                    .foregroundStyle(
+                                        today.isComplete ?
+                                            DSColor.textSecondary.opacity(0.4) :
+                                            DSColor.textSecondary.opacity(0.8)
+                                    )
+                                    .cornerRadius(DSRadius.button)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: DSRadius.button)
+                                            .strokeBorder(
+                                                today.isComplete ?
+                                                    DSColor.textSecondary.opacity(0.15) :
+                                                    DSColor.textSecondary.opacity(0.2),
+                                                lineWidth: 1
+                                            )
+                                    )
+                                }
+                                .disabled(today.isComplete)
+                                
+                                // Undo + Recovery row (secondary actions)
+                                let canUndo = !today.logs.isEmpty && !today.isComplete
+                                let canUseRecovery = !today.isComplete && (settings?.protocolDaysUsed ?? 0) < (settings?.protocolDayLimit ?? 0)
+
+                                HStack(spacing: 24) {
+                                    Button {
+                                        guard canUndo else { return }
+                                        undoLastLog()
+                                    } label: {
+                                        Text("Undo last log")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 14)
+                                            .overlay(
+                                                Capsule()
+                                                    .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
+                                            )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(!canUndo)
+                                    .opacity(canUndo ? 1.0 : 0.35)
+
+                                    if canUseRecovery, let settings = settings {
+                                        Button {
+                                            showingProtocolDayConfirmation = true
+                                        } label: {
+                                            Text("Recovery day · \(settings.protocolDayLimit - settings.protocolDaysUsed) left")
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 14)
+                                                .overlay(
+                                                    Capsule()
+                                                        .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
+                                                )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, alignment: .center)
                             }
-                        }
-                        
-                        // Undo button (always present; disabled when there is nothing to undo or day is complete)
-                        let canUndo = !today.logs.isEmpty && !today.isComplete
-                        
-                        Button {
-                            guard canUndo else { return }
-                            undoLastLog()
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "arrow.uturn.backward")
-                                    .font(.system(size: 11))
-                                Text("Undo Last Log")
-                                    .font(.system(size: 13, weight: .medium))
-                            }
-                            .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(DSColor.surface.opacity(0.3))
-                            )
-                            .overlay(
-                                Capsule()
-                                    .strokeBorder(DSColor.textSecondary.opacity(0.3), lineWidth: 1)
-                            )
-                        }
-                        .disabled(!canUndo)
-                        .opacity(canUndo ? 1.0 : 0.35)
+                        .padding(.top, panelTopPadding)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, customTabBarHeight + 12)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: panelHeight, alignment: .top)
+                        .background(
+                            Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
+                        )
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(
-                        Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
-                            .ignoresSafeArea()
-                    )
                 }
             }
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -597,7 +571,7 @@ struct CustomAmountSheet: View {
                 
                 Spacer()
                 
-                Text("Custom Amount")
+                Text("Log total")
                     .font(DSFont.button)
                     .fontWeight(.semibold)
                     .foregroundStyle(DSColor.textPrimary)
@@ -816,7 +790,7 @@ struct ProtocolDayConfirmationSheet: View {
                     
                     Spacer()
                     
-                    Text("Recovery Day")
+                    Text("Recovery Days (optional)")
                         .font(DSFont.button)
                         .fontWeight(.semibold)
                         .foregroundStyle(DSColor.textPrimary)
@@ -881,7 +855,7 @@ struct ProtocolDayConfirmationSheet: View {
                             )
                             
                             VStack(spacing: 8) {
-                                Text("\(remaining) Recovery \(remaining == 1 ? "Day" : "Days") remaining")
+                                Text("\(remaining) Recovery \(remaining == 1 ? "Day" : "Days") available")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundStyle(DSColor.textSecondary)
                                 

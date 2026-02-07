@@ -154,28 +154,21 @@ struct CircularProgressRing: View {
             // Center content
             VStack(spacing: 6) {
                 if isComplete {
-                    if let firstName = firstName, !firstName.isEmpty {
-                        Text("Done for today")
-                            .font(.system(size: 24, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Color.white.opacity(0.92))
-                        Text(firstName)
-                            .font(.system(size: 24, weight: .medium, design: .rounded))
-                            .foregroundStyle(Color.white.opacity(0.92))
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .minimumScaleFactor(0.65)
-                    } else {
-                        Text("Done for today")
-                            .font(.system(size: 28, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Color.white.opacity(0.92))
+                    VStack(spacing: 2) {
+                        Text("Target")
+                        Text("complete")
                     }
+                    .font(.system(size: 28, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.92))
+                    .multilineTextAlignment(.center)
                 } else {
-                    Text("\(completed > 0 ? completed : target)")
+                    let displayRemaining = max(remaining, 0)
+                    Text("\(displayRemaining)")
                         .font(.system(size: 56, weight: .bold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(Color.white.opacity(0.92))
 
-                    Text("push-ups")
+                    Text("remaining")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Color.white.opacity(0.45))
                 }
