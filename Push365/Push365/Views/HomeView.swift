@@ -516,8 +516,13 @@ struct HomeView: View {
         let yesterday = calendar.date(byAdding: .day, value: -1, to: todayKey) ?? todayKey
         let yesterdayKey = DayCalculator.dateKey(for: yesterday, calendar: calendar)
         
-        let lastCompletedKey = settings.lastCompletedDateKey.map { DayCalculator.dateKey(for: $0, calendar: calendar) }
-        let missedYesterday = (lastCompletedKey != yesterdayKey)
+        guard let lastCompletedDate = settings.lastCompletedDateKey else {
+            showMissedBanner = false
+            return
+        }
+        
+        let lastCompletedKey = DayCalculator.dateKey(for: lastCompletedDate, calendar: calendar)
+        let missedYesterday = (lastCompletedKey < yesterdayKey)
         let alreadyPrompted = settings.lastMissPromptDateKey == yesterdayKey
         
         if missedYesterday && !alreadyPrompted {
