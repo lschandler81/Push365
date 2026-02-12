@@ -13,13 +13,28 @@ import WidgetKit
 struct Push365App: App {
     @State private var modelContainer: ModelContainer?
     @State private var initError: Error?
+    @StateObject private var purchaseManager = PurchaseManager()
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var hadExistingStore = false
 
     init() {
+        let storeURL = Self.defaultStoreURL()
+        hadExistingStore = FileManager.default.fileExists(atPath: storeURL.path)
         _modelContainer = State(initialValue: Self.createModelContainer())
         _ = PhoneWatchSyncManager.shared
         if _modelContainer.wrappedValue == nil {
             // Error occurred - will be shown in UI
         }
+    }
+
+    static func defaultStoreURL() -> URL {
+        let schema = Schema([
+            UserSettings.self,
+            DayRecord.self,
+            LogEntry.self
+        ])
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        return modelConfiguration.url
     }
 
     static func createModelContainer() -> ModelContainer? {
@@ -59,6 +74,19 @@ struct Push365App: App {
                 SplashGateView()
                     .preferredColorScheme(.dark)
                     .modelContainer(container)
+                    .environmentObject(purchaseManager)
+                    .task {
+                        await purchaseManager.refreshEntitlements()
+                        runLegacySupporterMigrationIfNeeded()
+                    }
+                    .onChange(of: scenePhase) { _, newPhase in
+                        if newPhase == .active {
+                            Task {
+                                await purchaseManager.refreshEntitlements()
+                                runLegacySupporterMigrationIfNeeded()
+                            }
+                        }
+                    }
             } else {
                 DataLoadErrorView(onRetry: {
                     modelContainer = Self.createModelContainer()
@@ -66,6 +94,21 @@ struct Push365App: App {
                 .preferredColorScheme(.dark)
             }
         }
+    }
+
+    private func runLegacySupporterMigrationIfNeeded() {
+        let defaults = UserDefaults.standard
+        let migrationKey = "legacyMigrationComplete"
+        let supporterKey = "isSupporter"
+        
+        guard hadExistingStore else { return }
+        guard defaults.bool(forKey: migrationKey) == false else { return }
+        
+        if defaults.bool(forKey: supporterKey) == false {
+            defaults.set(true, forKey: supporterKey)
+        }
+        defaults.set(true, forKey: migrationKey)
+        purchaseManager.isSupporter = defaults.bool(forKey: supporterKey)
     }
 }
 

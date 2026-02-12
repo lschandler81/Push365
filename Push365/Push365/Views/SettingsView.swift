@@ -8,12 +8,14 @@
 import SwiftUI
 import SwiftData
 import WidgetKit
+import StoreKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settings: [UserSettings]
     @Query private var allRecords: [DayRecord]
     @Query private var allLogs: [LogEntry]
+    @EnvironmentObject private var purchaseManager: PurchaseManager
     
     @State private var showingResetConfirmation = false
     @State private var resetConfirmationText = ""
@@ -31,6 +33,79 @@ struct SettingsView: View {
             if let userSettings {
                 ScrollView {
                     VStack(spacing: 20) {
+                        // Support Push365
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Support Push365")
+                                .font(DSFont.sectionHeader)
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .textCase(.uppercase)
+                                .tracking(1)
+                            
+                            Text("Push365 is free. If it helps you, you can support development.")
+                                .font(DSFont.subheadline)
+                                .foregroundStyle(DSColor.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            
+                            let priceText = purchaseManager.product?.displayPrice ?? "…"
+                            
+                            Button {
+                                Task {
+                                    await purchaseManager.purchase()
+                                }
+                            } label: {
+                                Text(purchaseManager.isSupporter ? "You’re a Supporter ✅" : "Become a Supporter — \(priceText)")
+                                    .font(DSFont.button)
+                                    .foregroundStyle(DSColor.textPrimary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(DSColor.background)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(purchaseManager.isSupporter || purchaseManager.isLoading || purchaseManager.product == nil)
+                            .opacity(purchaseManager.isSupporter ? 0.7 : 1.0)
+                            
+                            Button {
+                                Task {
+                                    await purchaseManager.restore()
+                                }
+                            } label: {
+                                Text("Restore Purchase")
+                                    .font(DSFont.button)
+                                    .foregroundStyle(DSColor.textSecondary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(purchaseManager.isLoading)
+                            
+                            if purchaseManager.isLoading {
+                                Text("Processing…")
+                                    .font(DSFont.caption)
+                                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                            } else if let message = purchaseManager.errorMessage {
+                                Text(message)
+                                    .font(DSFont.caption)
+                                    .foregroundStyle(DSColor.destructive)
+                            } else if let message = purchaseManager.infoMessage {
+                                Text(message)
+                                    .font(DSFont.caption)
+                                    .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                            }
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: DSRadius.card)
+                                .fill(DSColor.surface)
+                        )
+                        .padding(.horizontal, 20)
+                        
                         // Notifications Card
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Notifications")
@@ -492,4 +567,5 @@ struct ResetConfirmationSheet: View {
 #Preview {
     SettingsView()
         .modelContainer(for: [UserSettings.self, DayRecord.self, LogEntry.self], inMemory: true)
+        .environmentObject(PurchaseManager())
 }
