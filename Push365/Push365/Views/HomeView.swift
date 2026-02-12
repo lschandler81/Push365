@@ -439,6 +439,7 @@ struct HomeView: View {
                         }
                     }
                 )
+                .interactiveDismissDisabled(true)
             }
         }
     }
