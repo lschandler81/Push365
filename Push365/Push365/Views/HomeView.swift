@@ -12,6 +12,7 @@ import WidgetKit
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
+    @Binding var selectedTab: Int
     
     // Local state
     @State private var settings: UserSettings?
@@ -24,6 +25,7 @@ struct HomeView: View {
     @State private var showingProtocolDayConfirmation = false
     @State private var showMissedBanner = false
     @State private var showAdaptiveConfirm = false
+    @State private var activeSupportMilestone: SupportMilestone?
     
     // Services
     private let store = ProgressStore()
@@ -334,6 +336,11 @@ struct HomeView: View {
                     syncWidgetChanges()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .supportMilestoneDebugTrigger)) { _ in
+                Task {
+                    await loadData()
+                }
+            }
             .sheet(isPresented: $showingCustomSheet) {
                 CustomAmountSheet(
                     amountText: $customAmountText,
@@ -414,6 +421,25 @@ struct HomeView: View {
                 .background(DSColor.background)
                 .presentationDetents([.medium])
             }
+            .fullScreenCover(item: $activeSupportMilestone) { milestone in
+                SupportMilestoneModal(
+                    milestone: milestone,
+                    onContinue: {
+                        UserDefaults.standard.set(true, forKey: milestone.userDefaultsKey)
+                        activeSupportMilestone = nil
+                        DispatchQueue.main.async {
+                            selectedTab = 0
+                        }
+                    },
+                    onSupport: {
+                        UserDefaults.standard.set(true, forKey: milestone.userDefaultsKey)
+                        activeSupportMilestone = nil
+                        DispatchQueue.main.async {
+                            selectedTab = 3
+                        }
+                    }
+                )
+            }
         }
     }
     
@@ -450,6 +476,10 @@ struct HomeView: View {
 
             if let settings = settings {
                 evaluateMissedBanner(settings: settings)
+            }
+            
+            if let today = today {
+                evaluateSupportMilestone(dayNumber: today.dayNumber)
             }
             
             // Request notification permission (non-blocking)
@@ -496,6 +526,26 @@ struct HomeView: View {
         } else {
             showMissedBanner = false
         }
+    }
+
+    private func evaluateSupportMilestone(dayNumber: Int) {
+        guard activeSupportMilestone == nil else { return }
+        let milestone: SupportMilestone?
+        switch dayNumber {
+        case 100:
+            milestone = .day100
+        case 365:
+            milestone = .day365
+        default:
+            milestone = nil
+        }
+        
+        guard let milestone else { return }
+        let key = milestone.userDefaultsKey
+        let alreadySeen = UserDefaults.standard.bool(forKey: key)
+        guard !alreadySeen else { return }
+
+        activeSupportMilestone = milestone
     }
     
     // MARK: - Actions
@@ -809,6 +859,138 @@ struct CustomAmountSheet: View {
     }
 }
 
+extension Notification.Name {
+    static let supportMilestoneDebugTrigger = Notification.Name("supportMilestoneDebugTrigger")
+}
+
+enum SupportMilestoneDefaults {
+    static let day100SeenKey = "supportMilestoneSeenDay100"
+    static let day365SeenKey = "supportMilestoneSeenDay365"
+}
+
+private enum SupportMilestone: String, Identifiable {
+    case day100
+    case day365
+    
+    var id: String { rawValue }
+    
+    var userDefaultsKey: String {
+        switch self {
+        case .day100:
+            return SupportMilestoneDefaults.day100SeenKey
+        case .day365:
+            return SupportMilestoneDefaults.day365SeenKey
+        }
+    }
+    
+    var title: String {
+        switch self {
+        case .day100:
+            return "Day 100."
+        case .day365:
+            return "Day 365. You did it."
+        }
+    }
+    
+    var bodyText: String {
+        switch self {
+        case .day100:
+            return "You've done 5,050 push-ups.\n\nMost people quit by Day 10.\n\nYou didn't.\n\nIf this app helped you get here, you can support development in Settings."
+        case .day365:
+            return "66,795 push-ups.\n\nOne year.\n\nOne more than yesterday, every single day.\n\nIf this helped you, thank you for considering supporting it."
+        }
+    }
+    
+    var supportButtonTitle: String {
+        switch self {
+        case .day100:
+            return "Support Now"
+        case .day365:
+            return "Support"
+        }
+    }
+}
+
+private struct SupportMilestoneModal: View {
+    let milestone: SupportMilestone
+    let onContinue: () -> Void
+    let onSupport: () -> Void
+    
+    var body: some View {
+        ZStack {
+            DSColor.background.ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    Spacer()
+                        .frame(height: 24)
+                    
+                    VStack(spacing: 12) {
+                        Text("Push365")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                            .textCase(.uppercase)
+                            .tracking(1.2)
+                        
+                        Text(milestone.title)
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                            .multilineTextAlignment(.center)
+                    }
+                    
+                    Text(milestone.bodyText)
+                        .font(.system(size: 15))
+                        .foregroundStyle(DSColor.textSecondary.opacity(0.85))
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 24)
+                    
+                    HStack(spacing: 12) {
+                        Button(action: onContinue) {
+                            Text("Continue")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(DSColor.textPrimary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(DSColor.surface.opacity(0.7))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .strokeBorder(DSColor.textSecondary.opacity(0.25), lineWidth: 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        
+                        Button(action: onSupport) {
+                            Text(milestone.supportButtonTitle)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(DSColor.textPrimary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(DSColor.surface.opacity(0.7))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .strokeBorder(DSColor.textSecondary.opacity(0.25), lineWidth: 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 20)
+                    
+                    Spacer()
+                        .frame(height: 20)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
+
 struct QuickStepButton: View {
     let label: String
     let action: () -> Void
@@ -1049,6 +1231,6 @@ struct ProtocolDayConfirmationSheet: View {
 // MARK: - Preview
 
 #Preview {
-    HomeView()
+    HomeView(selectedTab: .constant(0))
         .modelContainer(for: [UserSettings.self, DayRecord.self, LogEntry.self], inMemory: true)
 }

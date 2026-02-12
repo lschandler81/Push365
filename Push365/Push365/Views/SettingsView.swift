@@ -105,6 +105,79 @@ struct SettingsView: View {
                                 .fill(DSColor.surface)
                         )
                         .padding(.horizontal, 20)
+
+#if DEBUG
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Debug")
+                                .font(DSFont.sectionHeader)
+                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                .textCase(.uppercase)
+                                .tracking(1)
+                            
+                            Button {
+                                simulateSupportMilestone(dayNumber: 100, settings: userSettings)
+                            } label: {
+                                Text("Simulate Day 100 Support Modal")
+                                    .font(DSFont.button)
+                                    .foregroundStyle(DSColor.textPrimary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(DSColor.background)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            
+                            Button {
+                                simulateSupportMilestone(dayNumber: 365, settings: userSettings)
+                            } label: {
+                                Text("Simulate Day 365 Support Modal")
+                                    .font(DSFont.button)
+                                    .foregroundStyle(DSColor.textPrimary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(DSColor.background)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            
+                            Button {
+                                resetSupportMilestoneFlags()
+                            } label: {
+                                Text("Reset Support Milestone Flags")
+                                    .font(DSFont.button)
+                                    .foregroundStyle(DSColor.textPrimary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(DSColor.background)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .strokeBorder(DSColor.textSecondary.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: DSRadius.card)
+                                .fill(DSColor.surface)
+                        )
+                        .padding(.horizontal, 20)
+#endif
                         
                         // Notifications Card
                         VStack(alignment: .leading, spacing: 16) {
@@ -409,6 +482,38 @@ struct SettingsView: View {
             }
         }
     }
+
+#if DEBUG
+    private func simulateSupportMilestone(dayNumber: Int, settings: UserSettings) {
+        let calendar = Calendar.current
+        let todayKey = DayCalculator.dateKey(for: Date(), calendar: calendar)
+        let startDate = calendar.date(byAdding: .day, value: -(dayNumber - 1), to: todayKey) ?? todayKey
+        
+        settings.programStartDate = startDate
+        
+        let defaults = UserDefaults.standard
+        if dayNumber == 100 {
+            defaults.removeObject(forKey: SupportMilestoneDefaults.day100SeenKey)
+        } else if dayNumber == 365 {
+            defaults.removeObject(forKey: SupportMilestoneDefaults.day365SeenKey)
+        }
+        
+        if let record = try? progressStore.getOrCreateDayRecord(for: Date(), modelContext: modelContext) {
+            record.dayNumber = dayNumber
+            record.target = DayCalculator.resolvedTarget(for: Date(), dayNumber: dayNumber, settings: settings)
+        }
+        
+        try? modelContext.save()
+        NotificationCenter.default.post(name: .supportMilestoneDebugTrigger, object: nil)
+    }
+    
+    private func resetSupportMilestoneFlags() {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: SupportMilestoneDefaults.day100SeenKey)
+        defaults.removeObject(forKey: SupportMilestoneDefaults.day365SeenKey)
+        NotificationCenter.default.post(name: .supportMilestoneDebugTrigger, object: nil)
+    }
+#endif
     
     // MARK: - Helpers
     
