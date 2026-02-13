@@ -77,6 +77,7 @@ final class UserSettings {
     var longestStreak: Int
     var lastCompletedDateKey: Date?
     var lastStreakEvaluatedDateKey: Date?
+    var lastMissPromptDateKey: Date?
     
     // Flexible mode tracking
     var lastCompletedTarget: Int
@@ -134,7 +135,7 @@ final class UserSettings {
     /// Computed property for type-safe progress mode
     var mode: ProgressMode {
         get {
-            ProgressMode(rawValue: modeRaw) ?? .flexible
+            ProgressMode(rawValue: modeRaw) ?? .strict
         }
         set {
             modeRaw = newValue.rawValue
@@ -149,7 +150,7 @@ final class UserSettings {
         startDate: Date,
         programStartDate: Date? = nil,
         trackingStartDate: Date? = nil,
-        modeRaw: String = "flexible",
+        modeRaw: String = "strict",
         notificationsEnabled: Bool = true,
         morningHour: Int = 8,
         morningMinute: Int = 0,
@@ -160,6 +161,7 @@ final class UserSettings {
         longestStreak: Int = 0,
         lastCompletedDateKey: Date? = nil,
         lastStreakEvaluatedDateKey: Date? = nil,
+        lastMissPromptDateKey: Date? = nil,
         lastCompletedTarget: Int = 0,
         protocolDaysUsed: Int = 0,
         protocolDayLimit: Int = 5,
@@ -184,6 +186,7 @@ final class UserSettings {
         self.longestStreak = longestStreak
         self.lastCompletedDateKey = lastCompletedDateKey
         self.lastStreakEvaluatedDateKey = lastStreakEvaluatedDateKey
+        self.lastMissPromptDateKey = lastMissPromptDateKey
         self.lastCompletedTarget = lastCompletedTarget
         self.protocolDaysUsed = protocolDaysUsed
         self.protocolDayLimit = protocolDayLimit

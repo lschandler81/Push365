@@ -14,14 +14,12 @@ struct WelcomeView: View {
     
     @State private var firstName: String = ""
     @State private var dateOfBirth: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
-    @State private var selectedMode: ProgressMode = .flexible
     @State private var showBirthdayPicker: Bool = false
     @State private var hasBirthday: Bool = false
     @State private var tempDateOfBirth: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @State private var alreadyStarted: Bool = false
     @State private var startDate: Date = Date()
     @State private var enableBackfill: Bool = false
-    @State private var showModeInfo: Bool = false
     @State private var showRules: Bool = false
     @State private var isSubmitting: Bool = false
     @State private var errorMessage: String?
@@ -76,60 +74,29 @@ struct WelcomeView: View {
                             .font(.system(size: 48, weight: .bold))
                             .foregroundStyle(DSColor.textPrimary)
                         
-                        Text("Build consistency, one day at a time")
-                            .font(.system(size: 17))
-                            .foregroundStyle(DSColor.textSecondary)
-                            .multilineTextAlignment(.center)
-                        
-                        // View Rules button
-                        Button {
-                            showRules = true
-                        } label: {
-                            Text("View the Rules")
+                        VStack(spacing: 10) {
+                            Text("How it works")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(DSColor.textPrimary)
+                            
+                            Text("Day 1 starts with 1 push-up.\nEach day, you do one more than yesterday.\nThat’s it.")
                                 .font(.system(size: 15))
-                                .foregroundStyle(DSColor.accent)
+                                .foregroundStyle(DSColor.textPrimary.opacity(0.85))
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                            
+                            // View Rules button
+                            Button {
+                                showRules = true
+                            } label: {
+                                Text("View the Rules")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(DSColor.accent)
+                            }
+                            .padding(.top, 2)
                         }
-                        .padding(.top, 4)
                     }
                     .padding(.top, 60)
-                    
-                    // Progress Mode Card (FIRST - defines the rules)
-                    VStack(alignment: .leading, spacing: 20) {
-                        HStack {
-                            Text("Progress Mode")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(DSColor.textSecondary.opacity(0.8))
-                                .textCase(.uppercase)
-                                .tracking(1)
-                            
-                            Spacer()
-                            
-                            Button {
-                                showModeInfo = true
-                            } label: {
-                                Image(systemName: "info.circle")
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(DSColor.textSecondary.opacity(0.6))
-                            }
-                        }
-                        
-                        Picker("Mode", selection: $selectedMode) {
-                            ForEach(ProgressMode.allCases) { mode in
-                                Text(mode.displayName).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        
-                        Text(selectedMode == .strict ? "Target matches the day number." : "Target only increases after you complete it.")
-                            .font(.system(size: 14))
-                            .foregroundStyle(DSColor.textSecondary.opacity(0.7))
-                    }
-                    .padding(20)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(DSColor.surface)
-                    )
-                    .padding(.horizontal, 20)
                     
                     // Start Context Card
                     VStack(alignment: .leading, spacing: 20) {
@@ -155,9 +122,15 @@ struct WelcomeView: View {
                                         Text("Starting today")
                                             .font(.system(size: 15, weight: .medium))
                                             .foregroundStyle(DSColor.textPrimary)
-                                        Text("Begin your Push365 challenge now.")
-                                            .font(.system(size: 13))
-                                            .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                        if !alreadyStarted {
+                                            Text("Day 1 = 1 push-up")
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                        } else {
+                                            Text("Begin your Push365 challenge now.")
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(DSColor.textSecondary.opacity(0.6))
+                                        }
                                     }
                                     
                                     Spacer()
@@ -332,12 +305,17 @@ struct WelcomeView: View {
                     )
                     .padding(.horizontal, 20)
                     
+                    Text("You only need to do today.")
+                        .font(.system(size: 14))
+                        .foregroundStyle(DSColor.textSecondary.opacity(0.7))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    
                     // Get Started button
                     Button {
                         focusedField = nil
                         completeOnboarding()
                     } label: {
-                        Text("Get Started")
+                        Text("Start Day 1")
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(DSColor.textPrimary)
                             .frame(maxWidth: .infinity)
@@ -370,9 +348,6 @@ struct WelcomeView: View {
                     }
                 }
             }
-        }
-        .sheet(isPresented: $showModeInfo) {
-            ModeExplanationSheet()
         }
         .sheet(isPresented: $showRules) {
             RulesView()
@@ -422,7 +397,7 @@ struct WelcomeView: View {
                 }
                 
                 userSettings.dateOfBirth = hasBirthday ? dateOfBirth : nil
-                userSettings.mode = selectedMode
+                userSettings.mode = .strict
                 userSettings.hasCompletedOnboarding = true
                 
                 // Handle backfill if enabled

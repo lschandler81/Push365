@@ -22,6 +22,8 @@ struct HomeView: View {
     @State private var wasComplete = false
     @State private var showingModeInfo = false
     @State private var showingProtocolDayConfirmation = false
+    @State private var showMissedBanner = false
+    @State private var showAdaptiveConfirm = false
     
     // Services
     private let store = ProgressStore()
@@ -29,12 +31,15 @@ struct HomeView: View {
     private let notificationManager = NotificationManager()
 
     private let customTabBarHeight: CGFloat = 56
-    private let panelHeight: CGFloat = 260
     private let panelTopPadding: CGFloat = 8
     
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
+                let isCompactHeight = geometry.size.height < 700
+                let ringScale: CGFloat = isCompactHeight ? 0.9 : 1.0
+                let dayScale: CGFloat = isCompactHeight ? 0.92 : 1.0
+                let quickButtonScale: CGFloat = isCompactHeight ? 0.92 : 1.0
                 ZStack {
                     // Base dark blue background
                     Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
@@ -64,6 +69,60 @@ struct HomeView: View {
                             
                             Spacer()
                                 .frame(height: adaptiveSpacing(for: geometry, base: 40))
+
+                            if showMissedBanner {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Text("Missed yesterday? That happens.")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(DSColor.textPrimary)
+                                    
+                                    Text("You can keep going as-is, or switch to a mode that only increases after completion.")
+                                        .font(.system(size: 13))
+                                        .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    
+                                    HStack(spacing: 12) {
+                                        Button {
+                                            showMissedBanner = false
+                                        } label: {
+                                            Text("Keep going (Standard)")
+                                                .font(.system(size: 13, weight: .semibold))
+                                                .foregroundStyle(DSColor.background)
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 10)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .fill(DSColor.accent)
+                                                )
+                                        }
+                                        .buttonStyle(.plain)
+                                        
+                                        Button {
+                                            showAdaptiveConfirm = true
+                                        } label: {
+                                            Text("Switch to Adaptive")
+                                                .font(.system(size: 13, weight: .semibold))
+                                                .foregroundStyle(DSColor.textPrimary)
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 10)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .strokeBorder(DSColor.textSecondary.opacity(0.3), lineWidth: 1)
+                                                )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .fill(DSColor.surface.opacity(0.6))
+                                )
+                                .padding(.horizontal, 20)
+                                
+                                Spacer()
+                                    .frame(height: adaptiveSpacing(for: geometry, base: 16))
+                            }
                             
                             VStack(spacing: adaptiveSpacing(for: geometry, base: 12)) {
                                 // Day number - the hero alongside ring
@@ -72,6 +131,7 @@ struct HomeView: View {
                                     .foregroundStyle(DSColor.textPrimary)
                                     .frame(maxWidth: .infinity)
                                     .padding(.top, -12)
+                                    .scaleEffect(dayScale)
                                 
                                 // Circular Progress Ring - the hero
                                 CircularProgressRing(
@@ -82,6 +142,7 @@ struct HomeView: View {
                                     isComplete: today.isComplete,
                                     firstName: settings.firstName
                                 )
+                                .scaleEffect(ringScale)
                             }
                             .padding(.top, adaptiveSpacing(for: geometry, base: 20))
                             .padding(.bottom, adaptiveSpacing(for: geometry, base: 8))
@@ -165,12 +226,15 @@ struct HomeView: View {
                                     QuickLogButton(amount: 5, isLocked: today.isComplete) {
                                         logPushups(amount: 5)
                                     }
+                                    .scaleEffect(quickButtonScale)
                                     QuickLogButton(amount: 10, isLocked: today.isComplete) {
                                         logPushups(amount: 10)
                                     }
+                                    .scaleEffect(quickButtonScale)
                                     QuickLogButton(amount: 20, isLocked: today.isComplete) {
                                         logPushups(amount: 20)
                                     }
+                                    .scaleEffect(quickButtonScale)
                                 }
                                 
                                 // Custom Amount button
@@ -250,11 +314,11 @@ struct HomeView: View {
                                 }
                                 .frame(maxWidth: .infinity, alignment: .center)
                             }
-                        .padding(.top, panelTopPadding)
+                        .padding(.top, panelTopPadding + (isCompactHeight ? 2 : 0))
                         .padding(.horizontal, 20)
                         .padding(.bottom, customTabBarHeight + 12)
                         .frame(maxWidth: .infinity)
-                        .frame(height: panelHeight, alignment: .top)
+                        .frame(height: isCompactHeight ? 230 : 260, alignment: .top)
                         .background(
                             Color(red: 0x1A/255, green: 0x20/255, blue: 0x28/255)
                         )
@@ -305,6 +369,51 @@ struct HomeView: View {
                     )
                 }
             }
+            .sheet(isPresented: $showAdaptiveConfirm) {
+                VStack(spacing: 16) {
+                    Text("Adaptive Mode")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(DSColor.textPrimary)
+                    
+                    Text("Your target will only increase on days you complete.\nMissed days don’t push the number higher.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(DSColor.textSecondary.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    Button {
+                        if let settings = settings {
+                            settings.mode = .flexible
+                            try? modelContext.save()
+                            self.settings = settings
+                        }
+                        showAdaptiveConfirm = false
+                        showMissedBanner = false
+                    } label: {
+                        Text("Switch to Adaptive")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(DSColor.textPrimary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(DSColor.accent)
+                            )
+                    }
+                    
+                    Button {
+                        showAdaptiveConfirm = false
+                        showMissedBanner = false
+                    } label: {
+                        Text("Keep Standard")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(DSColor.textSecondary)
+                    }
+                }
+                .padding(24)
+                .background(DSColor.background)
+                .presentationDetents([.medium])
+            }
         }
     }
     
@@ -319,7 +428,7 @@ struct HomeView: View {
     }
     
     private func adaptiveSpacing(for geometry: GeometryProxy, base: CGFloat) -> CGFloat {
-        geometry.size.height < 700 ? base * 0.7 : base
+        geometry.size.height < 700 ? base * 0.6 : base
     }
     
     // MARK: - Data Loading
@@ -338,6 +447,10 @@ struct HomeView: View {
             
             // Reset completion tracking
             wasComplete = today?.isComplete ?? false
+
+            if let settings = settings {
+                evaluateMissedBanner(settings: settings)
+            }
             
             // Request notification permission (non-blocking)
             _ = await notificationManager.requestPermission()
@@ -351,6 +464,37 @@ struct HomeView: View {
             }
         } catch {
             errorMessage = "Error loading data: \(error.localizedDescription)"
+        }
+    }
+
+    private func evaluateMissedBanner(settings: UserSettings) {
+        let calendar = Calendar.current
+        let todayKey = DayCalculator.dateKey(for: Date(), calendar: calendar)
+        let dayNumber = DayCalculator.dayNumber(for: todayKey, startDate: settings.programStartDate, calendar: calendar)
+        
+        guard dayNumber > 1 else {
+            showMissedBanner = false
+            return
+        }
+        
+        guard settings.mode == .strict else {
+            showMissedBanner = false
+            return
+        }
+        
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: todayKey) ?? todayKey
+        let yesterdayKey = DayCalculator.dateKey(for: yesterday, calendar: calendar)
+        
+        let lastCompletedKey = settings.lastCompletedDateKey.map { DayCalculator.dateKey(for: $0, calendar: calendar) }
+        let missedYesterday = (lastCompletedKey != yesterdayKey)
+        let alreadyPrompted = settings.lastMissPromptDateKey == yesterdayKey
+        
+        if missedYesterday && !alreadyPrompted {
+            showMissedBanner = true
+            settings.lastMissPromptDateKey = yesterdayKey
+            try? modelContext.save()
+        } else {
+            showMissedBanner = false
         }
     }
     

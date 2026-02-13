@@ -30,7 +30,7 @@ final class ProgressStore {
         let newSettings = UserSettings(
             startDate: today,
             programStartDate: today,
-            modeRaw: "flexible",
+            modeRaw: "strict",
             notificationsEnabled: true,
             morningHour: 8,
             morningMinute: 0,
